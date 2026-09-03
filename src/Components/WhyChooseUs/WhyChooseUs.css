@@ -1,0 +1,55 @@
+.why-section {
+  width: 100%;
+  padding: 7rem 7%;
+  background: white;
+
+  display: grid;
+  grid-template-columns: 1fr 2.2fr;
+  gap: 2rem;
+  align-items: stretch;
+}
+.why-section{
+    overflow: hidden;
+}
+
+/* ================= LEFT ================= */
+
+.why-left {
+  background: white;
+  border: 1px solid rgba(139, 92, 246, 0.15);
+  border-radius: 22px;
+  padding: 2rem;
+ box-shadow:
+        0 10px 20px rgba(0, 0, 0, 0.201);
+  display: flex;
+  flex-direction: column;
+}
+
+.why-left h2 {
+  color: black;
+  font-weight: 500;
+  font-size: 2.8rem;
+  margin-bottom: .7rem;
+}
+
+.why-left p {
+  color: #5b5f65;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+.graduate-box {
+  flex: 1;
+  border-radius: 18px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  overflow: hidden;
+}
+
+.graduate-box img {
+  width: 100%;
+  object-fit: contain;
+}

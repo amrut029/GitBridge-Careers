@@ -1,0 +1,129 @@
+.comparison-table {
+
+    width: 100%;
+
+    /* border-collapse: collapse; */
+
+    background: white;
+    margin-top: 2rem;
+    border-radius: 22px;
+
+    overflow: hidden;
+
+    border: 1px solid rgba(12, 7, 23, 0.15);
+
+}
+.comparison-table{
+    overflow: hidden;
+}
+/* Header */
+
+.comparison-table thead {
+
+    background: rgba(255, 255, 255, .02);
+
+}
+
+.comparison-table th {
+
+    padding: 22px;
+
+    font-size: 1rem;
+
+    font-weight: 500;
+
+    color: black;
+
+    text-align: center;
+
+    border-bottom: 1px solid rgba(255, 255, 255, .08);
+
+}
+
+.comparison-table th:first-child {
+
+    text-align: left;
+
+    padding-left: 40px;
+
+}
+
+/* Highlight GitBridge Column */
+
+.comparison-table th:last-child {
+
+    background: linear-gradient(90deg, #8B3DFF 0%, #5A52FF 45%, #1E6DFF 100%);
+
+    color: white;
+
+}
+
+/* Body */
+
+.comparison-table td {
+
+    padding: 18px 22px;
+
+    border-bottom: 1px solid rgba(255, 255, 255, .05);
+
+    text-align: center;
+
+    font-size: .96rem;
+
+    color: black;
+
+}
+
+.comparison-table td:first-child {
+
+    text-align: left;
+
+    padding-left: 40px;
+
+    color: black;
+
+    font-weight: 500;
+
+}
+
+/* Purple Column */
+
+.comparison-table td:last-child {
+
+    /* background: linear-gradient(90deg, #8B3DFF 0%, #5A52FF 45%, #1E6DFF 100%); */
+
+    background: linear-gradient(90deg,
+            #7C3AED,
+            #2563EB);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+
+
+    font-weight: 500;
+
+}
+
+/* Hover */
+
+.comparison-table tbody tr {
+
+    transition: .3s;
+
+}
+
+.comparison-table tbody tr:hover td:first-child {
+
+    background: rgba(245, 36, 36, 0.03);
+
+}
+
+/* .comparison-table tbody tr:hover td:last-child {
+
+    background: linear-gradient(90deg,
+            #7C3AED,
+            #2563EB);
+            color: black;
+} */
+
+/* Remove Last Border */
+

@@ -1,0 +1,16 @@
+/* Disable text selection throughout the website */
+* {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    }
+    
+    /* Keep text selection enabled inside form fields */
+    input,
+    textarea {
+        -webkit-user-select: text;
+        -moz-user-select: text;
+        -ms-user-select: text;
+        user-select: text;
+    }

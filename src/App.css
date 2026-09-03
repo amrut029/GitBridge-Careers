@@ -1,0 +1,75 @@
+/* =========================================
+   GLOBAL PAGE STYLE
+========================================= */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100%;
+}
+
+body {
+  background: #ffffff !important;
+  color: #111827;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 17px;
+}
+
+/* Every React page */
+#root {
+  min-height: 100vh;
+  background: #ffffff;
+}
+
+/* Common page containers */
+.page,
+.login-page,
+.signup-container,
+.dashboard-page,
+.dashboard-container,
+.hero-section,
+.main-content {
+  background: #ffffff !important;
+}
+
+/* Increase normal text */
+p {
+  font-size: 17px;
+  line-height: 1.6;
+}
+
+/* Headings */
+h1 {
+  font-size: 42px;
+}
+
+h2 {
+  font-size: 32px;
+}
+
+h3 {
+  font-size: 24px;
+}
+
+h4 {
+  font-size: 20px;
+}
+
+/* Buttons */
+button {
+  font-size: 16px;
+}
+
+/* Inputs */
+input,
+textarea,
+select {
+  font-size: 16px;
+}

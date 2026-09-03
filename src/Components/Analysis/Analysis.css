@@ -1,0 +1,24 @@
+.analysis{
+
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    flex-direction:column;
+    background:#f7f8fc;
+
+}
+
+.analysis h1{
+
+    color:#5B3DF5;
+
+}
+
+.analysis progress{
+
+    width:400px;
+    height:18px;
+    margin:20px;
+
+}

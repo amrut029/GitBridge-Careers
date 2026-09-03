@@ -1,0 +1,602 @@
+.hero-right {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    position: relative;
+  }
+  
+  .dashboard-window {
+    position: relative;
+  
+    width: 100%;
+    max-width: 620px;
+  
+    padding: 18px;
+  
+    border-radius: 28px;
+  
+    background:
+      radial-gradient(
+        circle at 80% 10%,
+        rgba(113, 60, 255, 0.18),
+        transparent 35%
+      ),
+      #101323;
+  
+    box-shadow:
+      0 35px 80px rgba(31, 25, 70, 0.22);
+  
+    overflow: visible;
+  }
+  
+  
+  /* Browser */
+  
+  .window-top {
+    display: flex;
+    align-items: center;
+  
+    height: 30px;
+  
+    padding: 0 6px 14px;
+  }
+  
+  .window-dots {
+    display: flex;
+    gap: 6px;
+  }
+  
+  .window-dots span {
+    width: 7px;
+    height: 7px;
+  
+    border-radius: 50%;
+  
+    background: #596078;
+  }
+  
+  .window-title {
+    flex: 1;
+  
+    text-align: center;
+  
+    color: #858ba1;
+  
+    font-size: 10px;
+    font-weight: 500;
+  }
+  
+  .window-status {
+    color: #42e28b;
+    font-size: 8px;
+  }
+  
+  
+  /* Header */
+  
+  .preview-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  
+    padding: 18px 14px 22px;
+  
+    color: white;
+  }
+  
+  .preview-header span {
+    color: #9298ac;
+    font-size: 10px;
+  }
+  
+  .preview-header h3 {
+    margin: 5px 0 0;
+  
+    font-size: 17px;
+  }
+  
+  .profile-mini {
+    width: 34px;
+    height: 34px;
+  
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  
+    border-radius: 10px;
+  
+    background: #20263c;
+  
+    font-size: 18px;
+  }
+  
+  
+  /* Main Grid */
+  
+  .preview-grid {
+    display: grid;
+  
+    grid-template-columns: 1.4fr 1fr;
+  
+    gap: 12px;
+  }
+  
+  
+  /* Career Score */
+  
+  .career-score-card {
+    padding: 18px;
+  
+    border-radius: 17px;
+  
+    background: #171c2e;
+  
+    border: 1px solid #292f46;
+  
+    color: white;
+  }
+  
+  .score-header {
+    display: flex;
+    justify-content: space-between;
+  
+    color: #9298ac;
+  
+    font-size: 11px;
+  }
+  
+  .score-up {
+    color: #42e28b;
+  }
+  
+  .score-content {
+    display: flex;
+    align-items: center;
+  
+    gap: 18px;
+  
+    margin-top: 18px;
+  }
+  
+  .score-ring {
+    width: 115px;
+    height: 115px;
+  
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  
+    border-radius: 50%;
+  
+    background:
+      conic-gradient(
+        #7442ff 0deg 302deg,
+        #2a3045 302deg 360deg
+      );
+  
+    position: relative;
+  }
+  
+  .score-ring::before {
+    content: "";
+  
+    position: absolute;
+  
+    width: 84px;
+    height: 84px;
+  
+    border-radius: 50%;
+  
+    background: #171c2e;
+  }
+  
+  .score-ring div {
+    position: relative;
+  
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .score-ring strong {
+    font-size: 30px;
+  }
+  
+  .score-ring small {
+    font-size: 9px;
+    color: #8e94a8;
+  }
+  
+  .score-info {
+    flex: 1;
+  }
+  
+  .score-info strong {
+    font-size: 12px;
+    color: #5fe49a;
+  }
+  
+  .score-info p {
+    margin: 7px 0 12px;
+  
+    color: #858ba0;
+  
+    font-size: 10px;
+    line-height: 1.5;
+  }
+  
+  .progress-bar {
+    width: 100%;
+    height: 5px;
+  
+    background: #2c3247;
+  
+    border-radius: 10px;
+  
+    overflow: hidden;
+  }
+  
+  .progress-bar span {
+    display: block;
+  
+    width: 84%;
+    height: 100%;
+  
+    background: linear-gradient(
+      90deg,
+      #733fff,
+      #3f7bff
+    );
+  }
+  
+  
+  /* Mini Cards */
+  
+  .score-mini-grid {
+    display: grid;
+  
+    grid-template-columns: 1fr;
+    gap: 9px;
+  }
+  
+  .score-mini {
+    padding: 12px 14px;
+  
+    border-radius: 14px;
+  
+    background: #171c2e;
+  
+    border: 1px solid #292f46;
+  
+    color: white;
+  }
+  
+  .mini-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  
+    color: #8d93a8;
+  
+    font-size: 9px;
+  }
+  
+  .mini-top b {
+    width: 22px;
+    height: 22px;
+  
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  
+    border-radius: 50%;
+  
+    background: #232a47;
+  
+    color: #8d6aff;
+  
+    font-size: 8px;
+  }
+  
+  .score-mini > strong {
+    font-size: 20px;
+    margin-top: 6px;
+    display: inline-block;
+  }
+  
+  .score-mini > small {
+    color: #7f8598;
+    font-size: 8px;
+  }
+  
+  .score-mini p {
+    margin: 2px 0 0;
+  
+    font-size: 8px;
+  }
+  
+  .github p {
+    color: #8f6bff;
+  }
+  
+  .resume p {
+    color: #55df95;
+  }
+  
+  .skills p {
+    color: #58a8ff;
+  }
+  
+  
+  /* Bottom */
+  
+  .preview-bottom {
+    display: grid;
+  
+    grid-template-columns: 1.15fr 1fr;
+  
+    gap: 12px;
+  
+    margin-top: 12px;
+  }
+  
+  .activity-card,
+  .ai-card {
+    background: #171c2e;
+  
+    border: 1px solid #292f46;
+  
+    border-radius: 16px;
+  
+    padding: 15px;
+  }
+  
+  
+  /* Activity */
+  
+  .activity-title {
+    display: flex;
+    justify-content: space-between;
+  
+    color: white;
+  }
+  
+  .activity-title div {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  
+  .activity-title span {
+    color: #858ba0;
+    font-size: 9px;
+  }
+  
+  .activity-title strong {
+    font-size: 11px;
+  }
+  
+  .activity-title b {
+    color: #8562ff;
+    font-size: 9px;
+  }
+  
+  .activity-chart {
+    display: grid;
+  
+    grid-template-columns: repeat(7, 1fr);
+  
+    gap: 5px;
+  
+    margin-top: 16px;
+  }
+  
+  .activity-chart span {
+    width: 100%;
+    aspect-ratio: 1;
+  
+    border-radius: 3px;
+  }
+  
+  .activity-0 {
+    background: #252b3e;
+  }
+  
+  .activity-1 {
+    background: #3c8b66;
+  }
+  
+  .activity-2 {
+    background: #41c57e;
+  }
+  
+  .activity-3 {
+    background: #72e6a5;
+  }
+  
+  
+  /* AI */
+  
+  .ai-card {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .ai-label {
+    display: inline-block;
+  
+    padding: 5px 8px;
+  
+    border-radius: 20px;
+  
+    background: #282044;
+  
+    color: #a58aff;
+  
+    font-size: 8px;
+  }
+  
+  .ai-card h3 {
+    color: white;
+  
+    font-size: 18px;
+  
+    margin: 12px 0 7px;
+  }
+  
+  .ai-card p {
+    color: #858ba0;
+  
+    font-size: 9px;
+  
+    line-height: 1.5;
+  
+    max-width: 190px;
+  }
+  
+  .ai-card p strong {
+    color: white;
+  }
+  
+  .ai-card button {
+    margin-top: 7px;
+  
+    border: none;
+  
+    padding: 8px 11px;
+  
+    border-radius: 7px;
+  
+    background: linear-gradient(
+      90deg,
+      #713cff,
+      #3d73ff
+    );
+  
+    color: white;
+  
+    font-size: 8px;
+  
+    cursor: pointer;
+  }
+  
+  
+  /* Floating */
+  
+  .floating-notification {
+    position: absolute;
+  
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  
+    padding: 10px 14px;
+  
+    border-radius: 13px;
+  
+    background: rgba(255, 255, 255, 0.96);
+  
+    box-shadow:
+      0 15px 35px rgba(20, 15, 50, 0.18);
+  
+    z-index: 5;
+  }
+  
+  .notification-icon {
+    width: 28px;
+    height: 28px;
+  
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  
+    border-radius: 50%;
+  
+    background: #f0ebff;
+  
+    color: #7442ff;
+  
+    font-size: 12px;
+  }
+  
+  .floating-notification div:last-child {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  
+  .floating-notification strong {
+    color: #1b2030;
+  
+    font-size: 9px;
+  }
+  
+  .floating-notification span {
+    color: #7046e8;
+  
+    font-size: 8px;
+  }
+  
+  .profile-notification {
+    top: 80px;
+    right: -35px;
+  }
+  
+  .job-notification {
+    bottom: 100px;
+    left: -35px;
+  }
+  
+  
+  /* Responsive */
+  
+  @media (max-width: 992px) {
+  
+    .hero-right {
+      margin-top: 40px;
+    }
+  
+    .dashboard-window {
+      max-width: 650px;
+    }
+  
+    .profile-notification {
+      right: -10px;
+    }
+  
+    .job-notification {
+      left: -10px;
+    }
+  
+  }
+  
+  @media (max-width: 600px) {
+  
+    .dashboard-window {
+      padding: 12px;
+  
+      border-radius: 20px;
+    }
+  
+    .preview-grid {
+      grid-template-columns: 1fr;
+    }
+  
+    .score-mini-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  
+    .preview-bottom {
+      grid-template-columns: 1fr;
+    }
+  
+    .score-content {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  
+    .floating-notification {
+      display: none;
+    }
+  
+  }
