@@ -1,8 +1,7 @@
 import os
-
 from dotenv import load_dotenv
 from pymongo import MongoClient
-
+import certifi
 
 load_dotenv()
 
@@ -11,7 +10,7 @@ load_dotenv()
 # ENVIRONMENT VARIABLES
 # =========================================================
 
-MONGODB_URL = os.getenv("MONGODB_URL")
+MONGO_URL = os.getenv("MONGO_URL")
 DATABASE_NAME = os.getenv("DATABASE_NAME", "gitbridge")
 
 
@@ -34,28 +33,26 @@ def connect_database():
     global database
     global users_collection
 
-    if not MONGODB_URL:
-        print("❌ MONGODB_URL not found in .env")
-        return False
+    # Already connected
+    if database is not None:
+        return True
 
-    # Check if placeholder values are still present
-    if (
-        "YOUR_USERNAME" in MONGODB_URL
-        or "YOUR_PASSWORD" in MONGODB_URL
-        or "YOUR_NEW_PASSWORD" in MONGODB_URL
-        or "xxxxx.mongodb.net" in MONGODB_URL
-    ):
-        print("❌ Please add your real MongoDB Atlas URL in .env")
+    if not MONGO_URL:
+        print("❌ MONGO_URL not found in .env")
         return False
 
     try:
 
+        print("🔄 Connecting to MongoDB...")
+
         client = MongoClient(
-            MONGODB_URL,
+            MONGO_URL,
+            tls=True,
+            tlsCAFile=certifi.where(),
             serverSelectionTimeoutMS=10000
         )
 
-        # Test MongoDB connection
+        # Test connection
         client.admin.command("ping")
 
         database = client[DATABASE_NAME]
@@ -101,7 +98,10 @@ def get_users_collection():
     global users_collection
 
     if users_collection is None:
-        connect_database()
+        success = connect_database()
+
+        if not success:
+            return None
 
     return users_collection
 
@@ -120,7 +120,7 @@ def close_database():
 
         client.close()
 
-        print("🛑 MongoDB Connection Closed")
+        print("🔴 MongoDB Connection Closed")
 
     client = None
     database = None

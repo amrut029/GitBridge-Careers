@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./LoginPage.css";
 
@@ -9,6 +9,20 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const err = params.get("error");
+    if (err) {
+      if (err === "csrf_state_mismatch") {
+        setMessage("Google login verification expired. Please try again.");
+      } else if (err === "google_cancelled") {
+        setMessage("Google login was cancelled.");
+      } else {
+        setMessage("Google sign-in could not be completed. Please try again.");
+      }
+    }
+  }, []);
 
   // ==============================
   // NORMAL LOGIN
@@ -28,7 +42,7 @@ const LoginPage = () => {
       setLoading(true);
 
       const response = await fetch(
-        "http://127.0.0.1:8000/api/auth/login",
+        "http://localhost:8000/api/auth/login",
         {
           method: "POST",
           headers: {
@@ -53,9 +67,7 @@ const LoginPage = () => {
       // Token save
       if (data.access_token) {
         localStorage.setItem("token", data.access_token);
-      }
-
-      if (data.token) {
+      } else if (data.token) {
         localStorage.setItem("token", data.token);
       }
 
@@ -68,11 +80,11 @@ const LoginPage = () => {
       // Dashboard
       setTimeout(() => {
         navigate("/dashboard");
-      }, 800);
+      }, 600);
 
     } catch (error) {
       console.error(error);
-      setMessage("Server connection failed. Please try again.");
+      setMessage("Server connection failed. Please ensure backend is running.");
     } finally {
       setLoading(false);
     }
@@ -84,7 +96,7 @@ const LoginPage = () => {
 
   const handleGoogleLogin = () => {
     window.location.href =
-      "http://127.0.0.1:8000/api/auth/google";
+      "http://localhost:8000/api/auth/google";
   };
 
   return (

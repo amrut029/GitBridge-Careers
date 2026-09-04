@@ -1,92 +1,72 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
-from dotenv import load_dotenv
-from pymongo import MongoClient
-import os
-import certifi
 
 from auth import router as auth_router
+from dashboard import router as dashboard_router
+from database import connect_database, close_database
 
-load_dotenv()
 
 app = FastAPI(
-    title="GitBridge Careers API"
+    title="GitBridge API"
 )
 
+
+# SESSION
 app.add_middleware(
     SessionMiddleware,
     secret_key="gitbridge_super_secret_key_123456"
 )
 
-app.include_router(auth_router)
-
 
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
-# MongoDB URL
-MONGO_URL = os.getenv("MONGO_URL")
-
-client = None
-db = None
+# ROUTERS
+app.include_router(auth_router)
+app.include_router(dashboard_router)
 
 
 @app.on_event("startup")
-def startup_db_client():
-    global client, db
+def startup_database():
 
-    print("🚀 Starting GitBridge Careers API...")
+    print("🚀 Starting GitBridge API...")
 
-    if not MONGO_URL:
-        print("❌ MONGO_URL not found in .env")
-        return
+    success = connect_database()
 
-    try:
-        client = MongoClient(
-            MONGO_URL,
-            tls=True,
-            tlsCAFile=certifi.where(),
-            serverSelectionTimeoutMS=10000
-        )
-
-        client.admin.command("ping")
-
-        db = client["gitbridge"]
-
+    if success:
         print("✅ MongoDB Connected Successfully!")
-
-    except Exception as e:
-        print("❌ MongoDB Connection Error:")
-        print(e)
+    else:
+        print("❌ MongoDB Connection Failed!")
 
 
 @app.on_event("shutdown")
-def shutdown_db_client():
-    global client
+def shutdown_database():
 
-    if client:
-        client.close()
-        print("🔴 MongoDB connection closed")
+    close_database()
 
 
 @app.get("/")
 def home():
+
     return {
-        "message": "GitBridge Careers API is running"
+        "message": "GitBridge API Running Successfully"
     }
 
 
 @app.get("/health")
 def health():
+
     return {
-        "status": "healthy",
-        "mongodb": "connected" if db is not None else "not connected"
+        "status": "healthy"
     }

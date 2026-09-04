@@ -1,11 +1,15 @@
 fastapi
 uvicorn
 pymongo
+certifi
 python-dotenv
 pydantic
 email-validator
 passlib[bcrypt]
 python-jose[cryptography]
-authlib
-itsdangerous
+PyJWT
+httpx
+pypdf
+python-docx
+python-multipart
 requests
