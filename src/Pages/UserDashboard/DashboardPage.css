@@ -1482,3 +1482,137 @@ button {
   color: #c99cff;
   font-weight: 600;
 }
+
+
+/* ================= ML SCORING STYLES ================= */
+.ml-badge-pill {
+  background: #23163c;
+  color: #c99cff;
+  border: 1px solid #5d2f97;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+}
+
+.career-card.highlight-card {
+  border-color: #6a32b8;
+  background: radial-gradient(circle at top right, #24143a 0%, #09101c 70%);
+  box-shadow: 0 4px 20px rgba(139, 77, 232, 0.15);
+}
+
+.ml-subscores-box {
+  margin-top: 26px;
+  padding-top: 22px;
+  border-top: 1px solid #1f2c42;
+}
+
+.ml-bars-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 24px;
+  margin-top: 14px;
+}
+
+.ml-bar-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bar-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #c4d0e2;
+}
+
+.bar-header strong {
+  color: #f1f4f9;
+}
+
+.progress-track {
+  width: 100%;
+  height: 8px;
+  background: #141e30;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid #23324c;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.8s ease-in-out;
+}
+
+.purple-fill {
+  background: linear-gradient(90deg, #7b3cd9, #b97aff);
+  box-shadow: 0 0 10px rgba(185, 122, 255, 0.5);
+}
+
+.green-fill {
+  background: linear-gradient(90deg, #1fa57e, #62e5be);
+  box-shadow: 0 0 10px rgba(98, 229, 190, 0.4);
+}
+
+.blue-fill {
+  background: linear-gradient(90deg, #2d6cd8, #6bb1ff);
+  box-shadow: 0 0 10px rgba(107, 177, 255, 0.4);
+}
+
+.yellow-fill {
+  background: linear-gradient(90deg, #d49519, #f7ce46);
+  box-shadow: 0 0 10px rgba(247, 206, 70, 0.4);
+}
+
+.ml-recs-box {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #1f2c42;
+}
+
+.recs-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.rec-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #0b1220;
+  border: 1px solid #213048;
+  padding: 12px 16px;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+}
+
+.rec-card:hover {
+  border-color: #633aa8;
+  background: #111a2d;
+  transform: translateX(3px);
+}
+
+.rec-num {
+  font-size: 13px;
+  font-weight: 900;
+  color: #a46cf5;
+  background: #23163b;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.rec-card p {
+  margin: 0;
+  font-size: 13px;
+  color: #d1d9e7;
+  line-height: 1.5;
+}

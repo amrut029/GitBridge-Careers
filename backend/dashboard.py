@@ -18,6 +18,7 @@ from dotenv import load_dotenv
 
 from database import get_users_collection
 from resume_service import extract_pdf_text, extract_docx_text, calculate_ats_score
+from ml_service import evaluate_developer_profile
 
 load_dotenv()
 
@@ -90,13 +91,17 @@ def serialize_user(user):
         safe_github = {k: v for k, v in github.items() if k != "access_token"}
         safe_github["has_private_access"] = bool(github.get("access_token"))
 
+    resume = user.get("resume")
+    ml_insights = evaluate_developer_profile(github_data=github, resume_data=resume)
+
     return {
         "id": str(user["_id"]),
         "name": user.get("name") or user.get("email", "").split("@")[0],
         "email": user.get("email"),
         "github": safe_github,
-        "resume": user.get("resume"),
+        "resume": resume,
         "roast": user.get("roast"),
+        "ml_insights": ml_insights,
         "notifications": user.get("notifications", [])
     }
 

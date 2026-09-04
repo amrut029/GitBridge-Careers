@@ -930,53 +930,119 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* 🎯 CAREER INSIGHTS PANEL */}
+          {/* 🧠 ML-POWERED CAREER SCORING & INSIGHTS */}
           <section className="panel career-panel" id="career-insights-section">
             <div className="panel-title-row">
               <div className="panel-header-left">
-                <div className="panel-icon purple">🎯</div>
+                <div className="panel-icon purple">🧠</div>
                 <div>
-                  <h2>Career Insights</h2>
-                  <span className="panel-subtitle">Developer Profile Assessment</span>
+                  <h2>ML Developer Intelligence & Scoring</h2>
+                  <span className="panel-subtitle">Machine Learning Career Fit & Engineering Benchmark</span>
                 </div>
               </div>
+              {data?.ml_insights && (
+                <span className="ml-badge-pill">
+                  🤖 ML Model: RandomForest v1.0 • {data.ml_insights.percentile}
+                </span>
+              )}
             </div>
 
             <div className="career-metric-cards">
-              <div className="career-card">
-                <span className="career-label">Overall Score</span>
-                <strong className="career-value purple-text">{overallScore}%</strong>
-                <small>Calculated from GitHub + Resume metrics</small>
+              <div className="career-card highlight-card">
+                <span className="career-label">ML Developer Score</span>
+                <strong className="career-value purple-text">
+                  {data?.ml_insights?.overall_score || overallScore}%
+                </strong>
+                <small>Predicted via ML regression ensemble</small>
               </div>
 
               <div className="career-card">
-                <span className="career-label">Developer Level</span>
-                <strong className="career-value">{devLevel}</strong>
-                <small>Based on code velocity ({repoCount} repos)</small>
+                <span className="career-label">Engineering Level</span>
+                <strong className="career-value">
+                  {data?.ml_insights?.developer_level || devLevel}
+                </strong>
+                <small>Industry standard classification</small>
               </div>
 
               <div className="career-card">
-                <span className="career-label">Top Strength</span>
+                <span className="career-label">Talent Percentile</span>
                 <strong className="career-value green-text">
-                  {resume?.skills?.[0] || (github ? "Full-Stack Development" : "Setup in Progress")}
+                  {data?.ml_insights?.percentile || "Top 25%"}
                 </strong>
-                <small>Primary skill signal</small>
+                <small>Benchmarked vs active developers</small>
               </div>
 
               <div className="career-card">
-                <span className="career-label">Recommended Next Step</span>
+                <span className="career-label">Primary Signal</span>
                 <strong className="career-value yellow-text">
-                  {!github
-                    ? "Connect GitHub"
-                    : !resume
-                    ? "Upload Resume"
-                    : repoCount < 5
-                    ? "Build More Projects"
-                    : "Contribute to Open Source"}
+                  {resume?.skills?.[0] || (github ? "Full-Stack Web" : "Onboarding")}
                 </strong>
-                <small>High impact career action</small>
+                <small>Core technical domain strength</small>
               </div>
             </div>
+
+            {/* ML Sub-scores breakdown */}
+            {data?.ml_insights?.sub_scores && (
+              <div className="ml-subscores-box">
+                <span className="insight-label">🔬 ML Multi-Vector Evaluation:</span>
+                <div className="ml-bars-grid">
+                  <div className="ml-bar-item">
+                    <div className="bar-header">
+                      <span>💻 Code & Repo Quality</span>
+                      <strong>{data.ml_insights.sub_scores.code_quality}%</strong>
+                    </div>
+                    <div className="progress-track">
+                      <div className="progress-fill purple-fill" style={{ width: `${data.ml_insights.sub_scores.code_quality}%` }}></div>
+                    </div>
+                  </div>
+
+                  <div className="ml-bar-item">
+                    <div className="bar-header">
+                      <span>📄 ATS Resume Alignment</span>
+                      <strong>{data.ml_insights.sub_scores.ats_match}%</strong>
+                    </div>
+                    <div className="progress-track">
+                      <div className="progress-fill green-fill" style={{ width: `${data.ml_insights.sub_scores.ats_match}%` }}></div>
+                    </div>
+                  </div>
+
+                  <div className="ml-bar-item">
+                    <div className="bar-header">
+                      <span>🌐 Open Source & Community Traction</span>
+                      <strong>{data.ml_insights.sub_scores.community_impact}%</strong>
+                    </div>
+                    <div className="progress-track">
+                      <div className="progress-fill blue-fill" style={{ width: `${data.ml_insights.sub_scores.community_impact}%` }}></div>
+                    </div>
+                  </div>
+
+                  <div className="ml-bar-item">
+                    <div className="bar-header">
+                      <span>🛠️ Tech Stack Versatility</span>
+                      <strong>{data.ml_insights.sub_scores.tech_stack_breadth}%</strong>
+                    </div>
+                    <div className="progress-track">
+                      <div className="progress-fill yellow-fill" style={{ width: `${data.ml_insights.sub_scores.tech_stack_breadth}%` }}></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ML Recommendations */}
+            {data?.ml_insights?.recommendations && data.ml_insights.recommendations.length > 0 && (
+              <div className="ml-recs-box">
+                <span className="insight-label">🚀 Recommended Career Milestones (AI/ML Suggested):</span>
+                <div className="recs-list">
+                  {data.ml_insights.recommendations.map((rec, i) => (
+                    <div className="rec-card" key={i}>
+                      <span className="rec-num">0{i + 1}</span>
+                      <p>{rec}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </section>
 
           {/* 📦 REPOSITORIES SECTION */}
