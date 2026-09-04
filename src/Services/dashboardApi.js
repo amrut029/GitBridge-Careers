@@ -33,11 +33,14 @@ async function request(path, options = {}) {
 
 export const getDashboard = () => request("/me");
 
-export const connectGithub = (username) =>
+export const connectGithub = (username, token = "") =>
   request("/github/connect", {
     method: "POST",
-    body: JSON.stringify({ username }),
+    body: JSON.stringify({ username, token }),
   });
+
+export const getGithubOAuthUrl = () =>
+  request("/github/connect-url");
 
 export const refreshGithub = () =>
   request("/github/refresh", { method: "POST" });

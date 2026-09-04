@@ -1394,3 +1394,91 @@ button {
   .roast-head { flex-direction: column; align-items: flex-start; }
   .input-with-button { flex-direction: column; }
 }
+
+
+/* ================= PRIVATE REPOSITORY STYLES ================= */
+.status-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.status.private-access {
+  background: #27193b;
+  color: #cf9bff;
+  border: 1px solid #5a308c;
+}
+
+.private-repo-toggle-box {
+  margin-top: 14px;
+}
+
+.toggle-private-btn {
+  background: transparent;
+  color: #b183f5;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 0;
+  text-decoration: underline;
+  transition: color 0.2s;
+}
+
+.toggle-private-btn:hover {
+  color: #d8b7ff;
+}
+
+.token-field-box {
+  margin-top: 10px;
+  padding: 14px;
+  background: #090f1b;
+  border: 1px solid #233148;
+  border-radius: 10px;
+  animation: dropFade 0.2s ease;
+}
+
+.token-input {
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.token-hint {
+  display: block;
+  color: #8392a8;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.token-hint a {
+  color: #bb88ff;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.token-hint a:hover {
+  text-decoration: underline;
+}
+
+.token-hint code {
+  background: #192336;
+  padding: 2px 5px;
+  border-radius: 4px;
+  color: #ffca3a;
+}
+
+.repo-badge.badge-private {
+  background: #2a1b38;
+  color: #d19aff;
+  border: 1px solid #633394;
+}
+
+.repo-badge.badge-public {
+  background: #11262d;
+  color: #79ded2;
+  border: 1px solid #1f545a;
+}
+
+.private-summary {
+  font-size: 13px;
+  color: #c99cff;
+  font-weight: 600;
+}

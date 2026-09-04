@@ -8,6 +8,7 @@ import {
   disconnectGithub,
   generateRoast,
   getDashboard,
+  getGithubOAuthUrl,
   refreshGithub,
   uploadResume,
 } from "../../Services/dashboardApi";
@@ -28,12 +29,14 @@ export default function DashboardPage() {
   const [resumeBusy, setResumeBusy] = useState(false);
   const [roastBusy, setRoastBusy] = useState(false);
   const [notice, setNotice] = useState("");
-  const [noticeType, setNoticeType] = useState("info"); // info, success, error
+  const [noticeType, setNoticeType] = useState("info");
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
 
-  // GitHub username input state
+  // GitHub input state
   const [githubInput, setGithubInput] = useState("");
+  const [githubTokenInput, setGithubTokenInput] = useState("");
+  const [showTokenField, setShowTokenField] = useState(false);
   const [isChangingGithub, setIsChangingGithub] = useState(false);
 
   // Parse token from URL if redirected from Google OAuth
@@ -43,7 +46,6 @@ export default function DashboardPage() {
 
     if (tokenFromUrl) {
       localStorage.setItem("token", tokenFromUrl);
-      // Clean query parameter from browser address bar
       window.history.replaceState({}, document.title, window.location.pathname);
     }
 
@@ -100,19 +102,26 @@ export default function DashboardPage() {
     [github]
   );
 
-  // Connect GitHub by username
+  // Connect GitHub by username OR Token (Public + Private)
   const handleConnectGithub = async (e) => {
     e?.preventDefault();
     const username = githubInput.trim();
-    if (!username) {
-      showNotification("Please enter a valid GitHub username.", "error");
+    const token = githubTokenInput.trim();
+
+    if (!username && !token) {
+      showNotification("Please enter a GitHub username or GitHub Access Token.", "error");
       return;
     }
 
     try {
       setGithubBusy(true);
-      showNotification(`Connecting to GitHub user @${username}...`, "info");
-      const res = await connectGithub(username);
+      showNotification(
+        token
+          ? "Connecting GitHub with private repository access..."
+          : `Connecting to GitHub user @${username}...`,
+        "info"
+      );
+      const res = await connectGithub(username, token);
 
       setData((prev) => ({
         ...prev,
@@ -130,11 +139,32 @@ export default function DashboardPage() {
       }));
 
       setGithubInput("");
+      setGithubTokenInput("");
+      setShowTokenField(false);
       setIsChangingGithub(false);
-      showNotification(`GitHub account @${res.github.username} connected successfully! ✅`, "success");
+      showNotification(
+        res.github.has_private_access
+          ? `GitHub account @${res.github.username} connected with Private + Public repos! 🔒✅`
+          : `GitHub account @${res.github.username} connected successfully! ✅`,
+        "success"
+      );
     } catch (error) {
       showNotification(error.message, "error");
     } finally {
+      setGithubBusy(false);
+    }
+  };
+
+  // Connect via GitHub OAuth
+  const handleOAuthConnect = async () => {
+    try {
+      setGithubBusy(true);
+      const res = await getGithubOAuthUrl();
+      if (res?.url) {
+        window.location.href = res.url;
+      }
+    } catch (error) {
+      showNotification(error.message, "error");
       setGithubBusy(false);
     }
   };
@@ -199,7 +229,7 @@ export default function DashboardPage() {
       setData((previous) => ({
         ...previous,
         resume: response.resume,
-        roast: null, // Clear old roast when new resume is uploaded
+        roast: null,
         notifications: [
           {
             id: `res_${Date.now()}`,
@@ -290,9 +320,9 @@ export default function DashboardPage() {
     );
   }
 
-  // Calculate insights
   const bothConnected = Boolean(github && resume);
   const repoCount = stats.repositories || 0;
+  const privateCount = stats.private_repositories || 0;
   const devLevel = repoCount > 20 ? "Senior Developer" : repoCount > 7 ? "Mid-Level Developer" : "Emerging Developer";
   const overallScore = Math.round(((resume?.ats_score || 70) * 0.5) + (Math.min(repoCount * 4, 40) + Math.min((stats.stars || 0) * 2, 10)) * 0.5);
 
@@ -369,8 +399,6 @@ export default function DashboardPage() {
         >
           ⚙ <span>Settings</span>
         </button>
-
-        {/* IMPORTANT: No user profile card at the bottom of the sidebar */}
       </aside>
 
       {/* ================= MAIN CONTENT ================= */}
@@ -475,7 +503,7 @@ export default function DashboardPage() {
                 <em>{displayName}!</em> 👋
               </h1>
               <p>
-                Connect your GitHub and resume to unlock insights and get your personalized roast.
+                Connect your GitHub (public & private projects) and resume to unlock career insights and get your personalized roast.
               </p>
             </div>
             <div className="robot">🤖</div>
@@ -516,12 +544,17 @@ export default function DashboardPage() {
                   <div className="panel-icon purple">◉</div>
                   <div>
                     <h2>GitHub Connection</h2>
-                    <span className="panel-subtitle">Developer Activity & Repositories</span>
+                    <span className="panel-subtitle">Public & Private Repositories</span>
                   </div>
                 </div>
 
                 {github ? (
-                  <span className="status connected">Connected</span>
+                  <div className="status-group">
+                    <span className="status connected">Connected</span>
+                    {github.has_private_access && (
+                      <span className="status private-access">Private Repos 🔒</span>
+                    )}
+                  </div>
                 ) : (
                   <span className="status not-connected">Not Connected</span>
                 )}
@@ -531,8 +564,8 @@ export default function DashboardPage() {
                 <div className="github-connect-form">
                   <p className="panel-description">
                     {isChangingGithub
-                      ? "Enter your new GitHub username to replace your connected profile:"
-                      : "Enter your GitHub username to connect your repositories and live developer stats:"}
+                      ? "Enter your new GitHub username or Personal Access Token to replace your connected profile:"
+                      : "Enter your GitHub username to connect your repositories. Want your private repositories to appear as well? Add your GitHub Personal Access Token below!"}
                   </p>
                   <form onSubmit={handleConnectGithub} className="connect-input-group">
                     <label className="input-label">GitHub Username</label>
@@ -543,7 +576,6 @@ export default function DashboardPage() {
                         value={githubInput}
                         onChange={(e) => setGithubInput(e.target.value)}
                         disabled={githubBusy}
-                        required
                         className="gh-input"
                       />
                       <button
@@ -554,7 +586,45 @@ export default function DashboardPage() {
                         {githubBusy ? "Connecting..." : "Connect GitHub →"}
                       </button>
                     </div>
+
+                    {/* Private repos toggle */}
+                    <div className="private-repo-toggle-box">
+                      <button
+                        type="button"
+                        className="toggle-private-btn"
+                        onClick={() => setShowTokenField(!showTokenField)}
+                      >
+                        {showTokenField ? "▼ Hide Private Repos Option" : "🔒 Include Private Repositories (Add Token)"}
+                      </button>
+
+                      {showTokenField && (
+                        <div className="token-field-box">
+                          <label className="input-label">
+                            GitHub Personal Access Token (with 'repo' scope)
+                          </label>
+                          <input
+                            type="password"
+                            placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+                            value={githubTokenInput}
+                            onChange={(e) => setGithubTokenInput(e.target.value)}
+                            className="gh-input token-input"
+                          />
+                          <small className="token-hint">
+                            ℹ️ To display your private projects, generate a classic token on{" "}
+                            <a
+                              href="https://github.com/settings/tokens/new?scopes=repo,read:user"
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              GitHub Settings ↗
+                            </a>{" "}
+                            with <code>repo</code> read permission.
+                          </small>
+                        </div>
+                      )}
+                    </div>
                   </form>
+
                   {isChangingGithub && (
                     <button
                       type="button"
@@ -604,7 +674,7 @@ export default function DashboardPage() {
                         setGithubInput(github.username || "");
                         setIsChangingGithub(true);
                       }}
-                      title="Connect a different GitHub account"
+                      title="Connect a different GitHub account or add token"
                     >
                       ⇄ Change GitHub
                     </button>
@@ -619,9 +689,12 @@ export default function DashboardPage() {
                   </div>
 
                   <div className="stat-grid">
-                    <Stat value={formatNumber(stats.repositories)} label="Repositories" />
+                    <Stat value={formatNumber(stats.repositories)} label="Total Repos" />
+                    <Stat
+                      value={formatNumber(privateCount)}
+                      label={privateCount > 0 ? "Private 🔒" : "Public Only"}
+                    />
                     <Stat value={formatNumber(stats.stars)} label="Stars" />
-                    <Stat value={formatNumber(stats.forks)} label="Forks" />
                     <Stat value={formatNumber(stats.followers)} label="Followers" />
                   </div>
 
@@ -758,7 +831,6 @@ export default function DashboardPage() {
           {/* 📊 GITHUB ANALYSIS & CAREER INSIGHTS */}
           {github && (
             <div className="analysis-grid" id="github-analysis-section">
-              {/* GitHub Analysis */}
               <section className="panel">
                 <div className="panel-title-row">
                   <div className="panel-header-left">
@@ -790,7 +862,7 @@ export default function DashboardPage() {
                     <strong>Developer Strengths:</strong>
                     <p>
                       {repoCount > 5
-                        ? "Active GitHub presence with multiple repositories and consistent version control history."
+                        ? `Active GitHub presence with ${repoCount} projects${privateCount > 0 ? ` (including ${privateCount} private projects)` : ""} and version control history.`
                         : "Growing repository base. Building more public projects will significantly enhance recruiter visibility."}
                     </p>
                   </div>
@@ -805,7 +877,6 @@ export default function DashboardPage() {
                 </div>
               </section>
 
-              {/* Resume Review Insights */}
               <section className="panel" id="resume-review-section">
                 <div className="panel-title-row">
                   <div className="panel-header-left">
@@ -881,7 +952,7 @@ export default function DashboardPage() {
               <div className="career-card">
                 <span className="career-label">Developer Level</span>
                 <strong className="career-value">{devLevel}</strong>
-                <small>Based on public code velocity</small>
+                <small>Based on code velocity ({repoCount} repos)</small>
               </div>
 
               <div className="career-card">
@@ -914,7 +985,10 @@ export default function DashboardPage() {
               <div className="section-heading">
                 <div>
                   <span className="eyebrow">LIVE DATA</span>
-                  <h2>Public Repositories ({repositories.length})</h2>
+                  <h2>
+                    Repositories ({repositories.length})
+                    {privateCount > 0 && <small className="private-summary"> • {privateCount} Private 🔒</small>}
+                  </h2>
                 </div>
                 <button
                   className="secondary-btn"
@@ -927,13 +1001,15 @@ export default function DashboardPage() {
 
               <div className="repo-grid">
                 {repositories.length === 0 ? (
-                  <p className="empty-state">No public repositories found for @{github.username}.</p>
+                  <p className="empty-state">No repositories found for @{github.username}.</p>
                 ) : (
                   repositories.map((repo) => (
                     <article className="repo-card" key={repo.id || repo.name}>
                       <div className="repo-top">
                         <h3 title={repo.name}>{repo.name}</h3>
-                        <span className="repo-badge">{repo.private ? "Private" : "Public"}</span>
+                        <span className={`repo-badge ${repo.private ? "badge-private" : "badge-public"}`}>
+                          {repo.private ? "Private 🔒" : "Public 🌐"}
+                        </span>
                       </div>
 
                       <p className="repo-desc">
