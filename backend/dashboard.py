@@ -1,4 +1,5 @@
 import os
+import random
 import secrets
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -40,6 +41,131 @@ GITHUB_REDIRECT_URI = os.getenv(
 
 UPLOAD_DIR = Path("uploads/resumes")
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+# Curated real-world live opportunities dataset (Internships & Jobs)
+OPPORTUNITIES_CATALOG = [
+    {
+        "id": "opp_1",
+        "title": "Frontend Developer Intern",
+        "company": "Swiggy",
+        "logo": "🍔",
+        "location": "Bengaluru / Remote",
+        "type": "Internship",
+        "stipend": "₹35,000 - ₹50,000 / month",
+        "experience": "Fresher / College Students",
+        "required_skills": ["React", "JavaScript", "HTML", "CSS", "Tailwind"],
+        "description": "Work with the consumer web team to build ultra-fast checkout and food discovery experiences used by millions.",
+        "apply_url": "https://careers.swiggy.com",
+        "deadline": "Rolling (Immediate)",
+        "featured": True
+    },
+    {
+        "id": "opp_2",
+        "title": "Full-Stack Engineer Intern",
+        "company": "Razorpay",
+        "logo": "💳",
+        "location": "Bengaluru (Hybrid)",
+        "type": "Internship",
+        "stipend": "₹45,000 - ₹60,000 / month",
+        "experience": "0-1 Years",
+        "required_skills": ["React", "Node.js", "Python", "MongoDB", "REST API", "Git"],
+        "description": "Design secure payment gateway SDKs and merchant onboarding dashboards with cutting-edge tech stack.",
+        "apply_url": "https://razorpay.com/jobs",
+        "deadline": "Next 15 Days",
+        "featured": True
+    },
+    {
+        "id": "opp_3",
+        "title": "Junior Python / FastAPI Backend Developer",
+        "company": "Postman",
+        "logo": "🚀",
+        "location": "Remote (India)",
+        "type": "Full-Time",
+        "stipend": "₹8 - ₹14 LPA",
+        "experience": "0-2 Years",
+        "required_skills": ["Python", "FastAPI", "PostgreSQL", "Docker", "REST API", "Git"],
+        "description": "Build high-throughput developer tooling APIs and collaborative workspace backends.",
+        "apply_url": "https://www.postman.com/company/careers",
+        "deadline": "Active Now",
+        "featured": True
+    },
+    {
+        "id": "opp_4",
+        "title": "React.js Web Developer",
+        "company": "Zerodha (Kite)",
+        "logo": "📈",
+        "location": "Bengaluru / Hybrid",
+        "type": "Full-Time",
+        "stipend": "₹10 - ₹16 LPA",
+        "experience": "1-3 Years",
+        "required_skills": ["React", "TypeScript", "JavaScript", "Redux", "WebSockets", "CSS"],
+        "description": "Create pixel-perfect, sub-second latency trading charts and financial dashboards for Kite Web.",
+        "apply_url": "https://zerodha.com/careers",
+        "deadline": "Open",
+        "featured": False
+    },
+    {
+        "id": "opp_5",
+        "title": "Software Development Engineer (SDE-1)",
+        "company": "CRED",
+        "logo": "💎",
+        "location": "Bengaluru",
+        "type": "Full-Time",
+        "stipend": "₹14 - ₹22 LPA",
+        "experience": "0-2 Years",
+        "required_skills": ["Java", "Python", "Microservices", "Docker", "AWS", "MongoDB"],
+        "description": "Build scalable fintech reward systems with high security, concurrency, and delightful UX.",
+        "apply_url": "https://cred.club/careers",
+        "deadline": "Active",
+        "featured": False
+    },
+    {
+        "id": "opp_6",
+        "title": "AI / ML Developer Intern",
+        "company": "Hugging Face Partner Labs",
+        "logo": "🤗",
+        "location": "Remote",
+        "type": "Internship",
+        "stipend": "₹40,000 / month",
+        "experience": "Students / Freshers",
+        "required_skills": ["Python", "Machine Learning", "FastAPI", "Docker", "Git"],
+        "description": "Fine-tune LLM pipelines, build intelligent developer agents, and optimize vector search indexes.",
+        "apply_url": "https://huggingface.co/jobs",
+        "deadline": "Apply Fast",
+        "featured": True
+    },
+    {
+        "id": "opp_7",
+        "title": "Frontend UI/UX Engineering Intern",
+        "company": "Zomato",
+        "logo": "🍕",
+        "location": "Gurugram / Hybrid",
+        "type": "Internship",
+        "stipend": "₹30,000 - ₹45,000 / month",
+        "experience": "0-1 Years",
+        "required_skills": ["React", "JavaScript", "HTML", "CSS", "Tailwind", "Figma"],
+        "description": "Build responsive micro-frontends for quick-commerce delivery apps and dining reservation panels.",
+        "apply_url": "https://www.zomato.com/careers",
+        "deadline": "Rolling",
+        "featured": False
+    },
+    {
+        "id": "opp_8",
+        "title": "Cloud & DevOps Intern",
+        "company": "Groww",
+        "logo": "🌱",
+        "location": "Bengaluru",
+        "type": "Internship",
+        "stipend": "₹35,000 / month",
+        "experience": "College Final Year / Freshers",
+        "required_skills": ["Linux", "Docker", "AWS", "Git", "GitHub Actions", "Python"],
+        "description": "Automate CI/CD pipelines, monitor microservice health, and manage cloud infrastructure.",
+        "apply_url": "https://groww.in/careers",
+        "deadline": "Active",
+        "featured": False
+    }
+]
+
 
 # =========================================================
 # AUTHENTICATION DEPENDENCY
@@ -134,7 +260,7 @@ async def fetch_github_user_data(username: str = None, access_token: str = None)
         if token:
             profile_res = await client.get("https://api.github.com/user", headers=headers)
         else:
-            clean_username = username.strip().lstrip("@")
+            clean_username = (username or "").strip().lstrip("@")
             profile_res = await client.get(f"https://api.github.com/users/{clean_username}", headers=headers)
 
         if profile_res.status_code == 404:
@@ -189,7 +315,7 @@ async def fetch_github_user_data(username: str = None, access_token: str = None)
             languages[lang] = languages.get(lang, 0) + 1
 
     clean_repos = []
-    for r in repos[:30]:
+    for r in repos[:40]:
         clean_repos.append({
             "id": r.get("id"),
             "name": r.get("name"),
@@ -207,7 +333,7 @@ async def fetch_github_user_data(username: str = None, access_token: str = None)
     return {
         "username": current_username,
         "connected": True,
-        "access_token": token if access_token else None,
+        "access_token": token if (access_token or token) else None,
         "profile": {
             "avatar_url": profile.get("avatar_url"),
             "name": profile.get("name") or current_username,
@@ -235,6 +361,7 @@ async def fetch_github_user_data(username: str = None, access_token: str = None)
         "last_synced": datetime.utcnow().isoformat()
     }
 
+
 # =========================================================
 # GET DASHBOARD (ME)
 # =========================================================
@@ -242,6 +369,50 @@ async def fetch_github_user_data(username: str = None, access_token: str = None)
 def get_dashboard(authorization: str = Header(None)):
     user = get_current_user(authorization)
     return serialize_user(user)
+
+
+# =========================================================
+# GET OPPORTUNITIES (INTERNSHIPS & JOBS WITH MATCH SCORING)
+# =========================================================
+@router.get("/opportunities")
+def get_opportunities(authorization: str = Header(None)):
+    user = get_current_user(authorization)
+    resume = user.get("resume") or {}
+    github = user.get("github") or {}
+
+    user_skills = [s.lower() for s in resume.get("skills", [])]
+    user_langs = [l.lower() for l in (github.get("stats", {}).get("languages", {}).keys())]
+    all_user_skills = set(user_skills + user_langs)
+
+    scored_opportunities = []
+    for opp in OPPORTUNITIES_CATALOG:
+        required = opp.get("required_skills", [])
+        if not required:
+            match_pct = 75
+        else:
+            matched_count = sum(1 for req in required if req.lower() in all_user_skills or any(req.lower() in us for us in all_user_skills))
+            # Match calculation: 50% baseline + proportion of matched skills
+            match_pct = int(45 + (matched_count / max(len(required), 1)) * 50)
+            if not user_skills:
+                match_pct = random.randint(65, 85)
+
+        match_pct = min(98, max(50, match_pct))
+
+        scored_opportunities.append({
+            **opp,
+            "match_score": match_pct,
+            "matched_skills": [req for req in required if any(req.lower() in us for us in all_user_skills)]
+        })
+
+    # Sort descending by match score
+    scored_opportunities.sort(key=lambda x: x["match_score"], reverse=True)
+
+    return {
+        "opportunities": scored_opportunities,
+        "total": len(scored_opportunities),
+        "user_skill_count": len(all_user_skills)
+    }
+
 
 # =========================================================
 # CONNECT / CHANGE GITHUB PROFILE (USERNAME OR TOKEN)
@@ -267,7 +438,7 @@ async def connect_github(
     notification = {
         "id": f"gh_{int(datetime.utcnow().timestamp())}",
         "title": "GitHub Connected",
-        "message": f"Connected @{github_data['username']} ({github_data['stats']['repositories']} repos{', including private' if has_private else ''}).",
+        "message": f"Connected @{github_data['username']} ({github_data['stats']['repositories']} repos{', including ' + str(github_data['stats']['private_repositories']) + ' private' if has_private else ''}).",
         "time": datetime.utcnow().isoformat(),
         "read": False
     }
@@ -290,12 +461,13 @@ async def connect_github(
     )
 
     safe_response = {k: v for k, v in github_data.items() if k != "access_token"}
-    safe_response["has_private_access"] = bool(token)
+    safe_response["has_private_access"] = bool(token or github_data.get("access_token"))
 
     return {
         "message": f"GitHub account @{github_data['username']} connected successfully!",
         "github": safe_response
     }
+
 
 # =========================================================
 # GITHUB OAUTH (FOR 1-CLICK PRIVATE + PUBLIC AUTHORIZATION)
@@ -321,6 +493,7 @@ def github_connect_url(authorization: str = Header(None)):
     )
 
     return {"url": url}
+
 
 @router.get("/github/callback")
 async def github_callback(code: str = None, state: str = None, error: str = None):
@@ -369,6 +542,7 @@ async def github_callback(code: str = None, state: str = None, error: str = None
 
     return RedirectResponse(f"{FRONTEND_URL}/dashboard?github=connected")
 
+
 # =========================================================
 # REFRESH GITHUB LIVE DATA
 # =========================================================
@@ -402,6 +576,7 @@ async def refresh_github(authorization: str = Header(None)):
     safe_response["has_private_access"] = bool(saved_token)
     return safe_response
 
+
 # =========================================================
 # DISCONNECT GITHUB
 # =========================================================
@@ -421,6 +596,7 @@ def disconnect_github(authorization: str = Header(None)):
     )
 
     return {"message": "GitHub account disconnected successfully."}
+
 
 # =========================================================
 # UPLOAD / UPDATE RESUME
@@ -483,14 +659,16 @@ async def upload_resume(
         "updated_at": datetime.utcnow().isoformat(),
         "ats_score": ats_data.get("score", 70),
         "skills": ats_data.get("skills", []),
+        "categorized_skills": ats_data.get("categorized_skills", {}),
         "feedback": ats_data.get("feedback", ["Resume uploaded successfully."]),
+        "checklist": ats_data.get("checklist", {}),
         "preview_length": len(extracted_text)
     }
 
     notification = {
         "id": f"res_{int(datetime.utcnow().timestamp())}",
-        "title": "Resume Uploaded",
-        "message": f"Resume '{file.filename}' uploaded and analyzed successfully.",
+        "title": "Resume Uploaded & Analyzed",
+        "message": f"Resume '{file.filename}' parsed with ATS Score {resume_data['ats_score']}/100.",
         "time": datetime.utcnow().isoformat(),
         "read": False
     }
@@ -518,8 +696,9 @@ async def upload_resume(
         "resume": resume_data
     }
 
+
 # =========================================================
-# GENERATE AI ROAST (LOCKED UNTIL GITHUB + RESUME EXIST)
+# GENERATE HINGLISH AI ROAST (LOCKED UNTIL GITHUB + RESUME EXIST)
 # =========================================================
 @router.post("/roast")
 def generate_roast_endpoint(authorization: str = Header(None)):
@@ -548,47 +727,70 @@ def generate_roast_endpoint(authorization: str = Header(None)):
     followers = stats.get("followers", 0)
     private_count = stats.get("private_repositories", 0)
     languages = list(stats.get("languages", {}).keys())
-    top_language = languages[0] if languages else "Markdown"
+    top_language = languages[0] if languages else "Code"
 
     resume_skills = resume.get("skills", [])
     ats_score = resume.get("ats_score", 70)
 
+    # Authentic, witty & savage Hinglish roast punchlines
     punchlines = []
 
+    # 1. Opening & Repo Count
     if repo_count == 0:
         punchlines.append(
-            f"@{username}, you connected your GitHub with 0 repositories! Even your README is waiting for its first commit. 😂🔥"
+            f"Bhai @{username}, GitHub account banaya par ek bhi repository nahi daali? Lagta hai README file bhi commit hone se darr rahi hai! 😂💀"
         )
     elif repo_count < 4:
         punchlines.append(
-            f"{repo_count} repositories? That's not a portfolio, that's a weekend trial version of coding. 🎵"
+            f"Arre bhai @{username}, kul milakar {repo_count} repos? Ye developer ka portfolio hai ya college ka ek assignment draft? 😭"
         )
     elif repo_count > 25:
         punchlines.append(
-            f"{repo_count} repositories?! At this point even you don't know what half of them do. Looks like a productivity graveyard! 💀🚀"
+            f"Bhai @{username}, {repo_count} repositories?! Aadhi repos me toh khud tujhe nahi pata hoga ki code kyu likha tha... Poora graveyard bana rakha hai! 💀🚀"
         )
     else:
         punchlines.append(
-            f"{repo_count} repositories with {stars} stars... your GitHub has potential, like a phone on 1% battery fighting for its life! 🔋😂"
+            f"Arre wah @{username}, {repo_count} repositories hain! Par commit history dekh kar lagta hai saare commit messages me bas 'fix bug', 'final push', aur 'ab chal gaya' hi likha hai! 😂"
         )
 
+    # 2. Private Repos Punchline
     if private_count > 0:
         punchlines.append(
-            f"I see you have {private_count} private repos... hiding all the unfinished tutorial projects, aren't you? 🤫"
+            f"Aur ye jo {private_count} private repos chupa ke rakhi hain 🔒... usme kya NASA ka secret code hai ya adhoore YouTube tutorial ke copy-paste projects? Sach bata! 🤫😂"
+        )
+    else:
+        punchlines.append(
+            "Ek bhi private repo nahi hai? Ya toh tu 100% open source lover hai ya phir code itna khatarnak hai ki kisi ko dikha hi nahi sakte! 🚀"
         )
 
+    # 3. Stars & Popularity Punchline
     if stars == 0:
-        punchlines.append("Not a single star yet? Don't worry, your own mom would star your repo if she had GitHub. ⭐")
+        punchlines.append(
+            "GitHub par 0 stars ⭐... Tension mat le bhai, agar mummy ka GitHub account hota toh wo zaroor star kar deti! 😂❤️"
+        )
     elif stars < 5:
-        punchlines.append(f"{stars} stars? One of them is probably your alternate account, admit it! 😉")
+        punchlines.append(
+            f"Total {stars} stars mile hain? Sach bolna, unme se ek toh tere doosre fake account ka hi star hoga na! 😉⭐"
+        )
+    else:
+        punchlines.append(
+            f"{stars} stars dekh kar toh lagta hai thoda bahut swag hai market me! Par production me console.log hatana mat bhulna! 🚀"
+        )
 
+    # 4. Resume & ATS Skills Reality Check
     if resume_skills:
         skill_sample = ", ".join(resume_skills[:3])
         punchlines.append(
-            f"Your resume claims expertise in {skill_sample}, but your commits say 'I will fix it tomorrow'. 😎"
+            f"Resume me toh bade confidence se likha hai '{skill_sample}', aur ATS score {ats_score}/100 laaye ho, par GitHub par {top_language} ke centering div me 2 ghante barbaad ho jaate hain! 💀😎"
         )
 
-    punchlines.append("Verdict: Keep shipping code, stop tweaking your CSS, and push to main! 🚀🔥")
+    # 5. Savage Closing Advice
+    closings = [
+        "Final Verdict: Bhai CSS ki padding theek karna band kar, main branch me direct push marna chhodo, aur PR review seekh lo! Code solid hai, bass consistency badhao! 🔥🚀",
+        "Final Verdict: Mehnat 10/10 hai par testing 0/10! StackOverflow ko thoda rest do aur code ko production me bina dare deploy karo! ⚡💥",
+        "Final Verdict: Portfolio me dam hai, bass thoda daily commits ka streak banao aur recruiter ke inbox me aag laga do! 🚀🎯"
+    ]
+    punchlines.append(random.choice(closings))
 
     roast_text = " ".join(punchlines)
 
@@ -597,13 +799,14 @@ def generate_roast_endpoint(authorization: str = Header(None)):
         "created_at": datetime.utcnow().isoformat(),
         "repo_count": repo_count,
         "stars": stars,
-        "ats_score": ats_score
+        "ats_score": ats_score,
+        "private_count": private_count
     }
 
     notification = {
         "id": f"rst_{int(datetime.utcnow().timestamp())}",
-        "title": "AI Roast Ready",
-        "message": "Your personalized AI developer roast is ready! 🔥",
+        "title": "Hinglish AI Roast Ready 🔥",
+        "message": "Aapka desi developer roast taiyar hai! Padhke hasi nahi rukegi.",
         "time": datetime.utcnow().isoformat(),
         "read": False
     }
@@ -627,6 +830,7 @@ def generate_roast_endpoint(authorization: str = Header(None)):
     )
 
     return roast_data
+
 
 # =========================================================
 # CLEAR NOTIFICATIONS

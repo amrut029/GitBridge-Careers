@@ -33,6 +33,8 @@ async function request(path, options = {}) {
 
 export const getDashboard = () => request("/me");
 
+export const getOpportunities = () => request("/opportunities");
+
 export const connectGithub = (username, token = "") =>
   request("/github/connect", {
     method: "POST",
