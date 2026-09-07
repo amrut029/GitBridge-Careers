@@ -2,189 +2,287 @@ import os
 import pickle
 from pathlib import Path
 import numpy as np
-from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
+from sklearn.ensemble import RandomForestRegressor
 
 MODEL_PATH = Path(__file__).parent / "model.pkl"
 
-def generate_training_dataset():
+DOMAIN_KEYWORDS = {
+    "devops": {
+        "name": "DevOps & Cloud Infrastructure",
+        "role": "DevOps / Cloud Engineer",
+        "keywords": [
+            "jenkins", "kubernetes", "kube", "terraform", "docker", "dockerfile",
+            "hcl", "shell", "bash", "linux", "cloud", "clpoud", "ci/cd", "cicd",
+            "ansible", "aws", "gcp", "azure", "helm", "ops", "prometheus",
+            "grafana", "nginx", "iac", "devops", "vagrant", "openshift"
+        ]
+    },
+    "frontend": {
+        "name": "Frontend & UI/UX Engineering",
+        "role": "Frontend Web Engineer",
+        "keywords": [
+            "react", "reactjs", "vue", "vuejs", "angular", "next", "nextjs",
+            "html", "css", "tailwind", "ui", "vite", "frontend", "svelte",
+            "redux", "zustand", "sass", "bootstrap", "typescript", "javascript",
+            "chakra", "figma"
+        ]
+    },
+    "backend": {
+        "name": "Backend & Distributed Systems",
+        "role": "Backend / API Engineer",
+        "keywords": [
+            "fastapi", "django", "flask", "express", "node", "nodejs", "spring",
+            "springboot", "java", "c++", "cpp", "golang", "go", "rust",
+            "postgresql", "postgres", "mysql", "mongodb", "redis", "microservice",
+            "microservices", "rest", "graphql", "grpc", "api", "database"
+        ]
+    },
+    "ai_ml": {
+        "name": "AI / ML & Data Science",
+        "role": "AI / ML Systems Engineer",
+        "keywords": [
+            "machine learning", "deep learning", "ai", "ml", "nlp", "vision",
+            "pytorch", "tensorflow", "scikit", "data science", "jupyter",
+            "pandas", "numpy", "huggingface", "llm", "transformer", "rag", "langchain"
+        ]
+    }
+}
+
+
+def analyze_developer_domain(repos, languages, resume_skills=None):
     """
-    Generates synthetic benchmark training dataset of developer profiles
-    across junior, mid, senior, and lead engineering levels.
+    Analyzes actual GitHub repository names, languages, descriptions,
+    and resume skills to determine the developer's true technical specialization.
     """
-    np.random.seed(42)
-    n_samples = 1200
+    scores = {
+        "devops": 0,
+        "frontend": 0,
+        "backend": 0,
+        "ai_ml": 0
+    }
 
-    # Features:
-    # 0: repo_count (0-60)
-    # 1: stars_count (0-500)
-    # 2: forks_count (0-150)
-    # 3: followers_count (0-200)
-    # 4: languages_count (1-10)
-    # 5: has_private (0 or 1)
-    # 6: ats_score (40-100)
-    # 7: skills_count (1-20)
-    # 8: has_experience (0 or 1)
-    # 9: has_projects (0 or 1)
+    matched_keywords = {k: [] for k in scores}
 
-    repo_counts = np.random.exponential(scale=8, size=n_samples).clip(0, 60)
-    stars_counts = np.random.exponential(scale=15, size=n_samples).clip(0, 500)
-    forks_counts = (stars_counts * np.random.uniform(0.1, 0.4, size=n_samples)).clip(0, 150)
-    followers_counts = np.random.exponential(scale=12, size=n_samples).clip(0, 200)
-    languages_counts = np.random.randint(1, 10, size=n_samples)
-    has_private = np.random.choice([0, 1], size=n_samples, p=[0.3, 0.7])
-    ats_scores = np.random.normal(loc=72, scale=12, size=n_samples).clip(40, 100)
-    skills_counts = np.random.randint(2, 20, size=n_samples)
-    has_experience = np.random.choice([0, 1], size=n_samples, p=[0.4, 0.6])
-    has_projects = np.random.choice([0, 1], size=n_samples, p=[0.15, 0.85])
+    # 1. Analyze repositories (names, descriptions, languages)
+    for repo in repos:
+        name = str(repo.get("name", "")).lower()
+        desc = str(repo.get("description", "")).lower()
+        lang = str(repo.get("language", "")).lower()
+        text = f"{name} {desc} {lang}"
 
-    X = np.column_stack([
-        repo_counts, stars_counts, forks_counts, followers_counts,
-        languages_counts, has_private, ats_scores, skills_counts,
-        has_experience, has_projects
-    ])
+        for domain, conf in DOMAIN_KEYWORDS.items():
+            for kw in conf["keywords"]:
+                if kw in text:
+                    scores[domain] += 2
+                    if kw not in matched_keywords[domain]:
+                        matched_keywords[domain].append(kw)
 
-    # Target ground truth composite score (0-100)
-    y = (
-        0.22 * ats_scores +
-        0.18 * (np.log1p(repo_counts) / np.log1p(40) * 100).clip(0, 100) +
-        0.15 * (np.log1p(stars_counts) / np.log1p(100) * 100).clip(0, 100) +
-        0.12 * (languages_counts / 7 * 100).clip(0, 100) +
-        0.12 * (skills_counts / 14 * 100).clip(0, 100) +
-        0.08 * (has_experience * 100) +
-        0.08 * (has_projects * 100) +
-        0.05 * (has_private * 100)
-    ).clip(10, 100)
+    # 2. Analyze language breakdown
+    for lang in (languages or {}).keys():
+        lower_lang = lang.lower()
+        if lower_lang in ["hcl", "shell", "dockerfile", "powershell"]:
+            scores["devops"] += 4
+        elif lower_lang in ["javascript", "typescript", "html", "css", "vue", "svelte"]:
+            scores["frontend"] += 2
+        elif lower_lang in ["python", "java", "c++", "c#", "go", "rust", "php"]:
+            scores["backend"] += 2
+        elif lower_lang in ["jupyter notebook", "r", "julia"]:
+            scores["ai_ml"] += 4
 
-    return X, y
+    # 3. Analyze resume skills (if uploaded)
+    for skill in (resume_skills or []):
+        lower_skill = skill.lower()
+        for domain, conf in DOMAIN_KEYWORDS.items():
+            for kw in conf["keywords"]:
+                if kw in lower_skill:
+                    scores[domain] += 3
+                    if kw not in matched_keywords[domain]:
+                        matched_keywords[domain].append(kw)
 
+    # Find highest domain
+    sorted_domains = sorted(scores.items(), key=lambda x: x[1], reverse=True)
+    top_domain, top_score = sorted_domains[0]
+    second_domain, second_score = sorted_domains[1]
 
-def train_and_save_model():
-    """Trains a Random Forest Regressor and serializes to model.pkl."""
-    X, y = generate_training_dataset()
-    model = RandomForestRegressor(n_estimators=100, max_depth=8, random_state=42)
-    model.fit(X, y)
+    if top_score == 0:
+        return {
+            "domain_id": "fullstack",
+            "domain_name": "Full-Stack Web Development",
+            "role_title": "Software Developer",
+            "primary_signal": "General Software Development",
+            "matched_skills": []
+        }
 
-    with open(MODEL_PATH, "wb") as f:
-        pickle.dump(model, f)
-    
-    # Also save to parent root if exists
-    root_model = Path(__file__).parent.parent / "model.pkl"
-    try:
-        with open(root_model, "wb") as f:
-            pickle.dump(model, f)
-    except Exception:
-        pass
+    # If both frontend and backend are strong and balanced
+    if (
+        (top_domain in ["frontend", "backend"] and second_domain in ["frontend", "backend"])
+        and second_score >= top_score * 0.6
+        and top_score > 4
+    ):
+        return {
+            "domain_id": "fullstack",
+            "domain_name": "Full-Stack Web Architecture",
+            "role_title": "Full-Stack Engineer",
+            "primary_signal": "React & Python / Node.js",
+            "matched_skills": matched_keywords["frontend"][:3] + matched_keywords["backend"][:3]
+        }
 
-    print("✅ ML Developer Scoring Model trained and saved to model.pkl successfully!")
-    return model
+    conf = DOMAIN_KEYWORDS[top_domain]
+    top_keywords = [k.capitalize() for k in matched_keywords[top_domain][:4]]
+    primary_signal = " & ".join(top_keywords[:2]) if top_keywords else conf["name"]
 
-
-def get_ml_model():
-    """Loads the pre-trained ML model or trains a new one if missing."""
-    if MODEL_PATH.exists() and MODEL_PATH.stat().st_size > 0:
-        try:
-            with open(MODEL_PATH, "rb") as f:
-                return pickle.load(f)
-        except Exception:
-            pass
-    return train_and_save_model()
-
-
-# Initialize model on module load
-_model = get_ml_model()
+    return {
+        "domain_id": top_domain,
+        "domain_name": conf["name"],
+        "role_title": conf["role"],
+        "primary_signal": primary_signal,
+        "matched_skills": top_keywords
+    }
 
 
 def evaluate_developer_profile(github_data=None, resume_data=None):
     """
-    ML scoring engine that predicts overall developer score, sub-scores,
-    percentile ranking, and personalized engineering milestones.
+    Accurately evaluates developer metrics based on REAL GitHub activity
+    and uploaded resume data. If data is missing (0 repos or no resume),
+    accurately returns pending/unrated states instead of inflated defaults.
     """
     gh = github_data or {}
     stats = gh.get("stats", {})
     profile = gh.get("profile", {})
     repos = gh.get("repositories", [])
+    languages = stats.get("languages", {})
 
     res = resume_data or {}
+    has_resume = bool(res and res.get("uploaded_at"))
 
-    repo_count = float(stats.get("repositories", len(repos)))
-    stars_count = float(stats.get("stars", 0))
-    forks_count = float(stats.get("forks", 0))
-    followers_count = float(stats.get("followers", profile.get("followers", 0)))
-    languages = stats.get("languages", {})
-    languages_count = float(len(languages)) if languages else 1.0
-    has_private = 1.0 if stats.get("private_repositories", 0) > 0 or gh.get("has_private_access") else 0.0
+    repo_count = int(stats.get("repositories", len(repos)))
+    stars_count = int(stats.get("stars", 0))
+    forks_count = int(stats.get("forks", 0))
+    followers_count = int(stats.get("followers", profile.get("followers", 0)))
+    private_count = int(stats.get("private_repositories", 0))
+    languages_count = len(languages)
+    has_private = bool(private_count > 0 or gh.get("has_private_access"))
 
-    ats_score = float(res.get("ats_score", 65))
-    skills = res.get("skills", [])
-    skills_count = float(len(skills)) if skills else 3.0
-    has_experience = 1.0 if res.get("feedback") and not any("experience" in f.lower() for f in res.get("feedback", [])) else 0.5
-    has_projects = 1.0 if repo_count > 0 or (res and not any("project" in f.lower() for f in res.get("feedback", []))) else 0.5
+    resume_skills = res.get("skills", []) if has_resume else []
+    ats_score = int(res.get("ats_score", 0)) if has_resume else 0
 
-    # Feature vector
-    feature_vector = np.array([[
-        repo_count, stars_count, forks_count, followers_count,
-        languages_count, has_private, ats_score, skills_count,
-        has_experience, has_projects
-    ]])
+    # 1. Zero data state (No repos & No resume)
+    if repo_count == 0 and not has_resume:
+        return {
+            "overall_score": 0,
+            "status": "pending_data",
+            "developer_level": "Onboarding Developer",
+            "percentile": "Unranked",
+            "domain_id": "fullstack",
+            "domain_name": "Getting Started",
+            "primary_signal": "Connect GitHub & Upload Resume",
+            "sub_scores": {
+                "code_quality": 0,
+                "ats_match": 0,
+                "community_impact": 0,
+                "tech_stack_breadth": 0
+            },
+            "strengths": ["Account created. Connect GitHub or upload resume to generate your score."],
+            "recommendations": [
+                "Connect your GitHub profile with public and private repositories.",
+                "Upload your tech resume (PDF/DOCX) for deep ATS parsing."
+            ]
+        }
 
-    try:
-        predicted_score = float(_model.predict(feature_vector)[0])
-    except Exception:
-        # Fallback weighted heuristic if ML inference error
-        predicted_score = float(0.4 * ats_score + 0.3 * min(repo_count * 6, 60) + 0.3 * min(stars_count * 5, 40))
+    # 2. Deep Domain Specialization Analysis
+    domain_info = analyze_developer_domain(repos, languages, resume_skills)
 
-    final_score = int(np.clip(round(predicted_score), 25, 99))
-
-    # Sub-scores
-    code_quality = int(np.clip(round(35 + min(repo_count * 4.5, 45) + (10 if has_private else 0) + min(stars_count * 2, 10)), 20, 98))
-    ats_match = int(np.clip(round(ats_score), 20, 99))
-    community_impact = int(np.clip(round(20 + min(stars_count * 8, 50) + min(followers_count * 5, 20) + min(forks_count * 5, 10)), 15, 99))
-    tech_stack_breadth = int(np.clip(round(30 + min(languages_count * 9, 45) + min(skills_count * 3, 25)), 25, 99))
-
-    # Developer Level Classification
-    if final_score >= 85 or (repo_count >= 15 and stars_count >= 20):
-        developer_level = "Senior Software Engineer"
-        percentile = "Top 8%"
-    elif final_score >= 70 or repo_count >= 6:
-        developer_level = "Mid-Level Full-Stack Engineer"
-        percentile = "Top 24%"
-    elif final_score >= 50 or repo_count >= 2:
-        developer_level = "Associate Software Developer"
-        percentile = "Top 52%"
+    # 3. Sub-scores Calculation based strictly on REAL data
+    # Code Quality (Max 98)
+    if repo_count == 0:
+        code_quality = 0
     else:
-        developer_level = "Emerging Developer"
+        base_cq = 40 + min(repo_count * 2.5, 35) + (10 if has_private else 0) + min(stars_count * 2, 10) + min(forks_count, 5)
+        code_quality = int(np.clip(round(base_cq), 25, 96))
+
+    # ATS Match (Max 99)
+    if not has_resume:
+        ats_match = 0
+    else:
+        ats_match = int(np.clip(ats_score, 20, 99))
+
+    # Community Impact (Max 99)
+    if repo_count == 0 and followers_count == 0:
+        community_impact = 0
+    else:
+        base_ci = 20 + min(stars_count * 6, 40) + min(followers_count * 3, 20) + min(forks_count * 3, 15)
+        community_impact = int(np.clip(round(base_ci), 15, 98))
+
+    # Tech Stack Breadth (Max 99)
+    total_distinct_tech = languages_count + len(resume_skills)
+    if total_distinct_tech == 0:
+        tech_stack_breadth = 0
+    else:
+        base_tb = 30 + min(languages_count * 8, 40) + min(len(resume_skills) * 3, 25)
+        tech_stack_breadth = int(np.clip(round(base_tb), 25, 98))
+
+    # 4. Overall ML Score
+    if repo_count > 0 and has_resume:
+        overall_score = int(round(0.35 * code_quality + 0.35 * ats_match + 0.15 * tech_stack_breadth + 0.15 * community_impact))
+    elif repo_count > 0:
+        # Only GitHub connected
+        overall_score = int(round(0.55 * code_quality + 0.25 * tech_stack_breadth + 0.20 * community_impact))
+    else:
+        # Only Resume uploaded
+        overall_score = int(round(0.70 * ats_match + 0.30 * tech_stack_breadth))
+
+    overall_score = int(np.clip(overall_score, 10, 99))
+
+    # 5. Developer Level & Seniority Classification
+    role_prefix = domain_info["role_title"]
+    if overall_score >= 82 or (repo_count >= 18 and (stars_count >= 10 or forks_count >= 10)):
+        developer_level = f"Senior {role_prefix}"
+        percentile = "Top 10%"
+    elif overall_score >= 62 or repo_count >= 8:
+        developer_level = f"Mid-Level {role_prefix}"
+        percentile = "Top 25%"
+    elif overall_score >= 40 or repo_count >= 2:
+        developer_level = f"Associate {role_prefix}"
+        percentile = "Top 50%"
+    else:
+        developer_level = f"Junior {role_prefix}"
         percentile = "Top 75%"
 
-    # Key Strengths
+    # 6. Strengths
     strengths = []
-    if code_quality >= 75:
-        strengths.append(f"Strong repository velocity with {int(repo_count)} active projects.")
-    if ats_match >= 75:
-        strengths.append("High ATS resume alignment with industry-standard tech keywords.")
-    if tech_stack_breadth >= 70:
-        strengths.append(f"Diverse multi-language expertise ({int(languages_count)} programming languages).")
-    if community_impact >= 60:
-        strengths.append(f"Proven open-source traction ({int(stars_count)} stars, {int(followers_count)} followers).")
+    if repo_count > 0:
+        strengths.append(f"Active repository portfolio with {repo_count} projects ({domain_info['domain_name']}).")
+    if has_private:
+        strengths.append(f"Connected {private_count} private repositories with enterprise access.")
+    if has_resume:
+        strengths.append(f"ATS-parsed resume with {len(resume_skills)} technical skills.")
+    if stars_count > 0 or forks_count > 0:
+        strengths.append(f"Community recognition with {stars_count} stars and {forks_count} forks.")
     if not strengths:
-        strengths.append("Solid coding foundations with active career onboarding in progress.")
+        strengths.append("Foundational profile initialized.")
 
-    # High-impact recommendations
+    # 7. Strategic Recommendations
     recommendations = []
+    if not has_resume:
+        recommendations.append("Upload your resume to calculate ATS Match score and boost recruiter visibility.")
     if repo_count < 5:
-        recommendations.append("Build and push 2-3 production-grade full-stack projects with live deployment links.")
-    if ats_score < 75:
-        recommendations.append("Enhance resume with quantitative metrics (e.g. 'Reduced load time by 30%').")
+        recommendations.append(f"Deploy 2-3 production projects in {domain_info['domain_name']} with live links.")
     if stars_count < 5:
-        recommendations.append("Add detailed READMEs with architecture diagrams and demo GIFs to attract GitHub stars.")
-    if languages_count < 2:
-        recommendations.append("Expand into modern full-stack tools (TypeScript, Docker, FastAPI, PostgreSQL).")
-    if not recommendations:
-        recommendations.append("Contribute to high-impact open-source repositories and write technical blogs.")
+        recommendations.append("Add detailed READMEs with architectural diagrams to showcase repository quality.")
+    if domain_info["domain_id"] == "devops":
+        recommendations.append("Showcase multi-node Kubernetes deployments and automated Terraform CI/CD pipelines.")
+    elif domain_info["domain_id"] == "frontend":
+        recommendations.append("Add Core Web Vitals optimization benchmarks and responsive design demos.")
+    elif domain_info["domain_id"] == "backend":
+        recommendations.append("Implement database query caching (Redis) and async microservice architectures.")
 
     return {
-        "overall_score": final_score,
+        "overall_score": overall_score,
         "developer_level": developer_level,
         "percentile": percentile,
+        "domain_id": domain_info["domain_id"],
+        "domain_name": domain_info["domain_name"],
+        "primary_signal": domain_info["primary_signal"],
         "sub_scores": {
             "code_quality": code_quality,
             "ats_match": ats_match,

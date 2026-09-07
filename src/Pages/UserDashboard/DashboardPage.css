@@ -212,6 +212,12 @@ button {
   border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
+.pending-badge {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
 .fire-badge {
   background: rgba(239, 68, 68, 0.2);
   color: #ef4444;
@@ -730,6 +736,11 @@ button {
   color: var(--green);
 }
 
+.ov-tag.muted-tag {
+  background: rgba(150, 160, 180, 0.15);
+  color: var(--muted);
+}
+
 .ov-tag.purple {
   background: rgba(139, 77, 232, 0.15);
   color: var(--purple2);
@@ -958,6 +969,83 @@ button {
   margin: 0;
 }
 
+/* ================= STEP-BY-STEP PRIVATE REPO GUIDE ================= */
+.private-guide-banner {
+  background: linear-gradient(135deg, rgba(139, 77, 232, 0.08), var(--panel2));
+  border: 1px solid rgba(139, 77, 232, 0.3);
+  border-radius: 14px;
+  padding: 18px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.guide-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.guide-header-row strong {
+  display: block;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.guide-header-row p {
+  margin: 3px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.token-steps-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.token-step-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.step-badge {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--purple2);
+  background: rgba(139, 77, 232, 0.15);
+  padding: 2px 6px;
+  border-radius: 4px;
+  width: fit-content;
+}
+
+.token-step-card h4 {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.token-step-card p {
+  margin: 0;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.step-link {
+  color: var(--purple2);
+  font-size: 11px;
+  font-weight: 700;
+  text-decoration: underline;
+  margin-top: 4px;
+}
+
 /* ================= BUTTONS ================= */
 .primary-btn {
   background: linear-gradient(135deg, var(--purple), #4f46e5);
@@ -1021,6 +1109,7 @@ button {
   gap: 12px;
   align-items: center;
   margin-top: 10px;
+  flex-wrap: wrap;
 }
 
 /* ================= GITHUB CONNECT FORM ================= */
@@ -1259,6 +1348,7 @@ button {
   padding: 20px 24px;
   border-radius: 14px;
   border: 1px solid var(--border);
+  flex-wrap: wrap;
 }
 
 .ats-score-display {
@@ -1280,6 +1370,7 @@ button {
 
 .ats-info {
   flex: 1;
+  min-width: 200px;
 }
 
 .ats-info strong {
@@ -1292,6 +1383,12 @@ button {
   margin: 3px 0 0;
   color: var(--muted);
   font-size: 12px;
+}
+
+.ats-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
 }
 
 .resume-checklist-box {
@@ -1855,6 +1952,7 @@ button {
   padding: 4px;
   border-radius: 12px;
   border: 1px solid var(--border);
+  flex-wrap: wrap;
 }
 
 .selector-btn {
@@ -2543,7 +2641,8 @@ button {
 /* ================= RESPONSIVE ================= */
 @media (max-width: 1080px) {
   .overview-stats-grid,
-  .career-metric-cards {
+  .career-metric-cards,
+  .token-steps-grid {
     grid-template-columns: repeat(2, 1fr);
   }
   .main-grid {
@@ -2562,7 +2661,8 @@ button {
   }
   .overview-stats-grid,
   .career-metric-cards,
-  .ml-bars-grid {
+  .ml-bars-grid,
+  .token-steps-grid {
     grid-template-columns: 1fr;
   }
 }

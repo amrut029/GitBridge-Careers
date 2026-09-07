@@ -60,6 +60,9 @@ export const uploadResume = async (file) => {
   });
 };
 
+export const deleteResume = () =>
+  request("/resume", { method: "DELETE" });
+
 export const generateRoast = () =>
   request("/roast", { method: "POST" });
 

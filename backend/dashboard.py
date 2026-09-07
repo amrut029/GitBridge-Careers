@@ -1,5 +1,4 @@
 import os
-import random
 import secrets
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -16,6 +15,7 @@ from fastapi import (
 from fastapi.responses import RedirectResponse
 from jose import jwt, JWTError
 from dotenv import load_dotenv
+import numpy as np
 
 from database import get_users_collection
 from resume_service import extract_pdf_text, extract_docx_text, calculate_ats_score
@@ -42,126 +42,134 @@ GITHUB_REDIRECT_URI = os.getenv(
 UPLOAD_DIR = Path("uploads/resumes")
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
-# Curated real-world live opportunities dataset (Internships & Jobs)
+# Comprehensive Live Opportunities Catalog (DevOps, Cloud, FullStack, Backend, Frontend, AI/ML)
 OPPORTUNITIES_CATALOG = [
     {
-        "id": "opp_1",
-        "title": "Frontend Developer Intern",
-        "company": "Swiggy",
-        "logo": "🍔",
-        "location": "Bengaluru / Remote",
+        "id": "opp_devops_1",
+        "title": "Cloud & DevOps Engineer Intern",
+        "company": "Groww",
+        "logo": "🌱",
+        "location": "Bengaluru / Hybrid",
         "type": "Internship",
-        "stipend": "₹35,000 - ₹50,000 / month",
-        "experience": "Fresher / College Students",
-        "required_skills": ["React", "JavaScript", "HTML", "CSS", "Tailwind"],
-        "description": "Work with the consumer web team to build ultra-fast checkout and food discovery experiences used by millions.",
-        "apply_url": "https://careers.swiggy.com",
-        "deadline": "Rolling (Immediate)",
+        "domain": "devops",
+        "stipend": "₹40,000 - ₹55,000 / month",
+        "experience": "0-1 Years / Freshers",
+        "required_skills": ["Kubernetes", "Docker", "Terraform", "Linux", "CI/CD", "AWS"],
+        "description": "Automate Kubernetes multi-cluster infrastructure, maintain Terraform IaC modules, and configure Jenkins CI/CD deployment pipelines.",
+        "apply_url": "https://groww.in/careers",
+        "deadline": "Active (Immediate)",
         "featured": True
     },
     {
-        "id": "opp_2",
-        "title": "Full-Stack Engineer Intern",
+        "id": "opp_devops_2",
+        "title": "Junior DevOps & Infrastructure Engineer",
         "company": "Razorpay",
         "logo": "💳",
         "location": "Bengaluru (Hybrid)",
-        "type": "Internship",
-        "stipend": "₹45,000 - ₹60,000 / month",
-        "experience": "0-1 Years",
-        "required_skills": ["React", "Node.js", "Python", "MongoDB", "REST API", "Git"],
-        "description": "Design secure payment gateway SDKs and merchant onboarding dashboards with cutting-edge tech stack.",
-        "apply_url": "https://razorpay.com/jobs",
-        "deadline": "Next 15 Days",
-        "featured": True
-    },
-    {
-        "id": "opp_3",
-        "title": "Junior Python / FastAPI Backend Developer",
-        "company": "Postman",
-        "logo": "🚀",
-        "location": "Remote (India)",
         "type": "Full-Time",
-        "stipend": "₹8 - ₹14 LPA",
+        "domain": "devops",
+        "stipend": "₹12 - ₹18 LPA",
         "experience": "0-2 Years",
-        "required_skills": ["Python", "FastAPI", "PostgreSQL", "Docker", "REST API", "Git"],
-        "description": "Build high-throughput developer tooling APIs and collaborative workspace backends.",
-        "apply_url": "https://www.postman.com/company/careers",
-        "deadline": "Active Now",
+        "required_skills": ["Docker", "Kubernetes", "Linux", "Jenkins", "Terraform", "Shell", "Git"],
+        "description": "Scale financial cloud infrastructure, monitor microservice latency with Prometheus/Grafana, and automate release pipelines.",
+        "apply_url": "https://razorpay.com/jobs",
+        "deadline": "Open Now",
         "featured": True
     },
     {
-        "id": "opp_4",
-        "title": "React.js Web Developer",
-        "company": "Zerodha (Kite)",
-        "logo": "📈",
-        "location": "Bengaluru / Hybrid",
-        "type": "Full-Time",
-        "stipend": "₹10 - ₹16 LPA",
-        "experience": "1-3 Years",
-        "required_skills": ["React", "TypeScript", "JavaScript", "Redux", "WebSockets", "CSS"],
-        "description": "Create pixel-perfect, sub-second latency trading charts and financial dashboards for Kite Web.",
-        "apply_url": "https://zerodha.com/careers",
-        "deadline": "Open",
-        "featured": False
-    },
-    {
-        "id": "opp_5",
-        "title": "Software Development Engineer (SDE-1)",
+        "id": "opp_devops_3",
+        "title": "Site Reliability Engineer (SRE-1)",
         "company": "CRED",
         "logo": "💎",
         "location": "Bengaluru",
         "type": "Full-Time",
-        "stipend": "₹14 - ₹22 LPA",
-        "experience": "0-2 Years",
-        "required_skills": ["Java", "Python", "Microservices", "Docker", "AWS", "MongoDB"],
-        "description": "Build scalable fintech reward systems with high security, concurrency, and delightful UX.",
+        "domain": "devops",
+        "stipend": "₹15 - ₹24 LPA",
+        "experience": "1-3 Years",
+        "required_skills": ["Kubernetes", "AWS", "Terraform", "Linux", "Python", "Docker"],
+        "description": "Ensure 99.99% system availability, optimize autoscaling for high-concurrency payment events, and harden cloud network security.",
         "apply_url": "https://cred.club/careers",
         "deadline": "Active",
         "featured": False
     },
     {
-        "id": "opp_6",
-        "title": "AI / ML Developer Intern",
+        "id": "opp_fullstack_1",
+        "title": "Full-Stack Web Engineer Intern",
+        "company": "Swiggy",
+        "logo": "🍔",
+        "location": "Bengaluru / Remote",
+        "type": "Internship",
+        "domain": "fullstack",
+        "stipend": "₹35,000 - ₹50,000 / month",
+        "experience": "Students / Freshers",
+        "required_skills": ["React", "JavaScript", "Python", "FastAPI", "MongoDB", "Git"],
+        "description": "Build responsive merchant dashboards and scalable backend APIs serving millions of real-time orders.",
+        "apply_url": "https://careers.swiggy.com",
+        "deadline": "Rolling",
+        "featured": True
+    },
+    {
+        "id": "opp_backend_1",
+        "title": "Junior Backend Developer (Python / FastAPI)",
+        "company": "Postman",
+        "logo": "🚀",
+        "location": "Remote (India)",
+        "type": "Full-Time",
+        "domain": "backend",
+        "stipend": "₹10 - ₹16 LPA",
+        "experience": "0-2 Years",
+        "required_skills": ["Python", "FastAPI", "PostgreSQL", "Docker", "REST API", "Git"],
+        "description": "Build high-throughput developer tooling APIs and collaborative workspace sync engines.",
+        "apply_url": "https://www.postman.com/company/careers",
+        "deadline": "Active Now",
+        "featured": True
+    },
+    {
+        "id": "opp_frontend_1",
+        "title": "Frontend UI/UX Engineer",
+        "company": "Zerodha (Kite)",
+        "logo": "📈",
+        "location": "Bengaluru / Hybrid",
+        "type": "Full-Time",
+        "domain": "frontend",
+        "stipend": "₹10 - ₹17 LPA",
+        "experience": "1-3 Years",
+        "required_skills": ["React", "TypeScript", "JavaScript", "Redux", "CSS", "Tailwind"],
+        "description": "Create sub-second latency financial charts and trading interfaces with clean UX and accessible design.",
+        "apply_url": "https://zerodha.com/careers",
+        "deadline": "Open",
+        "featured": False
+    },
+    {
+        "id": "opp_aiml_1",
+        "title": "AI / ML & Agentic Systems Intern",
         "company": "Hugging Face Partner Labs",
         "logo": "🤗",
         "location": "Remote",
         "type": "Internship",
-        "stipend": "₹40,000 / month",
+        "domain": "ai_ml",
+        "stipend": "₹45,000 / month",
         "experience": "Students / Freshers",
         "required_skills": ["Python", "Machine Learning", "FastAPI", "Docker", "Git"],
-        "description": "Fine-tune LLM pipelines, build intelligent developer agents, and optimize vector search indexes.",
+        "description": "Build autonomous agent pipelines, optimize vector search retrieval, and fine-tune open-weight models.",
         "apply_url": "https://huggingface.co/jobs",
         "deadline": "Apply Fast",
         "featured": True
     },
     {
-        "id": "opp_7",
-        "title": "Frontend UI/UX Engineering Intern",
+        "id": "opp_frontend_2",
+        "title": "React.js Developer Intern",
         "company": "Zomato",
         "logo": "🍕",
         "location": "Gurugram / Hybrid",
         "type": "Internship",
+        "domain": "frontend",
         "stipend": "₹30,000 - ₹45,000 / month",
         "experience": "0-1 Years",
-        "required_skills": ["React", "JavaScript", "HTML", "CSS", "Tailwind", "Figma"],
-        "description": "Build responsive micro-frontends for quick-commerce delivery apps and dining reservation panels.",
+        "required_skills": ["React", "JavaScript", "HTML", "CSS", "Tailwind"],
+        "description": "Develop customer-facing quick-commerce ordering flows and real-time order tracking pages.",
         "apply_url": "https://www.zomato.com/careers",
         "deadline": "Rolling",
-        "featured": False
-    },
-    {
-        "id": "opp_8",
-        "title": "Cloud & DevOps Intern",
-        "company": "Groww",
-        "logo": "🌱",
-        "location": "Bengaluru",
-        "type": "Internship",
-        "stipend": "₹35,000 / month",
-        "experience": "College Final Year / Freshers",
-        "required_skills": ["Linux", "Docker", "AWS", "Git", "GitHub Actions", "Python"],
-        "description": "Automate CI/CD pipelines, monitor microservice health, and manage cloud infrastructure.",
-        "apply_url": "https://groww.in/careers",
-        "deadline": "Active",
         "featured": False
     }
 ]
@@ -372,7 +380,7 @@ def get_dashboard(authorization: str = Header(None)):
 
 
 # =========================================================
-# GET OPPORTUNITIES (INTERNSHIPS & JOBS WITH MATCH SCORING)
+# GET OPPORTUNITIES (ACCURATE REAL-DATA MATCH SCORING)
 # =========================================================
 @router.get("/opportunities")
 def get_opportunities(authorization: str = Header(None)):
@@ -382,26 +390,50 @@ def get_opportunities(authorization: str = Header(None)):
 
     user_skills = [s.lower() for s in resume.get("skills", [])]
     user_langs = [l.lower() for l in (github.get("stats", {}).get("languages", {}).keys())]
-    all_user_skills = set(user_skills + user_langs)
+
+    # Extract technologies and keywords from actual repositories
+    repo_keywords = []
+    for r in github.get("repositories", []):
+        name = str(r.get("name", "")).lower()
+        desc = str(r.get("description", "")).lower()
+        text = f"{name} {desc}"
+        for kw in [
+            "kubernetes", "docker", "terraform", "jenkins", "linux", "react", "python",
+            "fastapi", "aws", "node", "html", "css", "mongodb", "postgres", "git",
+            "ci/cd", "hcl", "shell", "bash", "ansible", "microservice", "vue", "next"
+        ]:
+            if kw in text:
+                repo_keywords.append(kw)
+
+    all_user_skills = set(user_skills + user_langs + repo_keywords)
 
     scored_opportunities = []
     for opp in OPPORTUNITIES_CATALOG:
         required = opp.get("required_skills", [])
-        if not required:
-            match_pct = 75
-        else:
-            matched_count = sum(1 for req in required if req.lower() in all_user_skills or any(req.lower() in us for us in all_user_skills))
-            # Match calculation: 50% baseline + proportion of matched skills
-            match_pct = int(45 + (matched_count / max(len(required), 1)) * 50)
-            if not user_skills:
-                match_pct = random.randint(65, 85)
+        matched_skills = []
 
-        match_pct = min(98, max(50, match_pct))
+        if not all_user_skills:
+            match_pct = 40
+        else:
+            for req in required:
+                req_l = req.lower()
+                # Direct match
+                if any(req_l in us or us in req_l for us in all_user_skills):
+                    matched_skills.append(req)
+                # Domain aliases (e.g. HCL/Shell -> DevOps/Linux/Terraform/Kubernetes)
+                elif req_l in ["devops", "cloud", "aws", "docker", "linux", "ci/cd", "terraform", "kubernetes", "jenkins"] and any(
+                    k in all_user_skills for k in ["hcl", "shell", "terraform", "kubernetes", "jenkins", "dockerfile", "linux"]
+                ):
+                    matched_skills.append(req)
+
+            match_ratio = len(matched_skills) / max(len(required), 1)
+            # Match score: 40% baseline + match ratio * 56
+            match_pct = int(np.clip(round(40 + match_ratio * 56), 35, 96))
 
         scored_opportunities.append({
             **opp,
             "match_score": match_pct,
-            "matched_skills": [req for req in required if any(req.lower() in us for us in all_user_skills)]
+            "matched_skills": list(dict.fromkeys(matched_skills))
         })
 
     # Sort descending by match score
@@ -438,7 +470,7 @@ async def connect_github(
     notification = {
         "id": f"gh_{int(datetime.utcnow().timestamp())}",
         "title": "GitHub Connected",
-        "message": f"Connected @{github_data['username']} ({github_data['stats']['repositories']} repos{', including ' + str(github_data['stats']['private_repositories']) + ' private' if has_private else ''}).",
+        "message": f"Connected @{github_data['username']} ({github_data['stats']['repositories']} repos{', including ' + str(github_data['stats']['private_repositories']) + ' private 🔒' if has_private else ''}).",
         "time": datetime.utcnow().isoformat(),
         "read": False
     }
@@ -695,6 +727,32 @@ async def upload_resume(
         "message": "Resume saved and analyzed successfully!",
         "resume": resume_data
     }
+
+
+# =========================================================
+# DELETE RESUME
+# =========================================================
+@router.delete("/resume")
+def delete_resume(authorization: str = Header(None)):
+    user = get_current_user(authorization)
+    old_resume = user.get("resume")
+    if old_resume and old_resume.get("path"):
+        old_file = Path(old_resume["path"])
+        if old_file.exists():
+            try:
+                old_file.unlink()
+            except Exception:
+                pass
+
+    users = get_users_collection()
+    users.update_one(
+        {"_id": user["_id"]},
+        {
+            "$unset": {"resume": ""},
+            "$set": {"updated_at": datetime.utcnow().isoformat()}
+        }
+    )
+    return {"message": "Resume deleted successfully."}
 
 
 # =========================================================
