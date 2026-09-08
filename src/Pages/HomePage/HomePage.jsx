@@ -1,80 +1,200 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./HomePage.css";
 
+const THEMES = [
+  { id: "classic", name: "⚡ Classic Dark" },
+  { id: "oled", name: "🌌 Midnight OLED" },
+  { id: "cyberpunk", name: "🚀 Cyberpunk" },
+  { id: "light", name: "☀️ Modern Light" }
+];
+
+const STARTUP_PREVIEWS = [
+  {
+    logo: "⚡",
+    company: "Zepto",
+    stage: "🦄 Quick-Commerce Unicorn",
+    timeline: "⚡ Immediate 48-hr Hiring Sprint",
+    role: "Cloud & DevOps Intern",
+    stipend: "₹50,000 - ₹65,000 / mo",
+    match: "96% Match",
+    tags: ["Kubernetes", "Terraform", "Docker", "Linux"]
+  },
+  {
+    logo: "🧠",
+    company: "Sarvam AI",
+    stage: "🚀 Series A ($41M Funded)",
+    timeline: "Hiring for Indic AI Models",
+    role: "AI Infrastructure / MLOps",
+    stipend: "₹18 - ₹28 LPA",
+    match: "92% Match",
+    tags: ["Python", "FastAPI", "Kubernetes", "PyTorch"]
+  },
+  {
+    logo: "🟡",
+    company: "Blinkit",
+    stage: "🚀 Zomato Group",
+    timeline: "Active Now • Batch 2025/2026",
+    role: "Junior Platform & SRE",
+    stipend: "₹14 - ₹20 LPA",
+    match: "94% Match",
+    tags: ["Docker", "Linux", "Jenkins", "Prometheus"]
+  },
+  {
+    logo: "🍕",
+    company: "Slice",
+    stage: "🦄 Digital Bank Unicorn",
+    timeline: "🎓 2026 Campus & Off-Campus",
+    role: "Backend / API Engineer",
+    stipend: "₹45,000 / mo",
+    match: "88% Match",
+    tags: ["Python", "FastAPI", "PostgreSQL", "Git"]
+  }
+];
+
 const HomePage = () => {
+  const navigate = useNavigate();
+
+  // Theme state persisted
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem("gb_theme") || "classic";
+  });
+
+  // Scroll state & Active Section
+  const [scrolled, setScrolled] = useState(false);
+  const [activeSection, setActiveSection] = useState("home");
+  const [helpQuery, setHelpQuery] = useState("");
+  const [helpNotice, setHelpNotice] = useState("");
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("gb_theme", theme);
+  }, [theme]);
+
+  // Scroll Listener for Navbar Animation (70% viewport or scrolled threshold)
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY;
+      const scrollThreshold = window.innerHeight * 0.35; // 35% of screen initiates smooth dock
+      setScrolled(scrollY > scrollThreshold);
+
+      // Scrollspy active section detection
+      const sections = ["home", "features", "how-it-works", "opportunities"];
+      for (const sec of sections) {
+        const el = document.getElementById(sec);
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          if (rect.top <= 200 && rect.bottom >= 200) {
+            setActiveSection(sec);
+            break;
+          }
+        }
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const goLogin = () => {
-    window.location.href = "/login";
+    navigate("/login");
   };
 
   const scrollTo = (id) => {
+    setActiveSection(id);
     document.getElementById(id)?.scrollIntoView({
-      behavior: "smooth"
+      behavior: "smooth",
     });
   };
 
+  const handleHelpSubmit = (e) => {
+    e.preventDefault();
+    if (!helpQuery.trim()) return;
+    setHelpNotice(`Thank you! Support ticket submitted for: "${helpQuery}". Redirecting to sign in...`);
+    setTimeout(() => {
+      navigate("/login");
+    }, 1200);
+  };
+
   return (
-    <div className="home-page">
-
-      {/* ================= NAVBAR ================= */}
-      <header className="navbar">
-
+    <div className={`home-page theme-${theme}`} data-theme={theme}>
+      {/* ================= GLASSMORPHIC NAVBAR ================= */}
+      <header className={`navbar ${scrolled ? "navbar-scrolled" : ""}`}>
         <div
           className="brand"
-          onClick={() =>
-            window.scrollTo({
-              top: 0,
-              behavior: "smooth"
-            })
-          }
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
         >
-          <div className="brand-logo">◆</div>
-
+          <div className="brand-logo">⚡</div>
           <span>
-            GitBridge <b>AI</b>
+            GitBridge <b>Careers</b>
           </span>
         </div>
 
         <nav className="nav-links">
-          <button onClick={() => scrollTo("home")}>
+          <button
+            className={`nav-link-btn ${activeSection === "home" ? "active" : ""}`}
+            onClick={() => scrollTo("home")}
+          >
             Home
+            {activeSection === "home" && <span className="active-indicator-line"></span>}
           </button>
 
-          <button onClick={() => scrollTo("features")}>
+          <button
+            className={`nav-link-btn ${activeSection === "features" ? "active" : ""}`}
+            onClick={() => scrollTo("features")}
+          >
             Features
+            {activeSection === "features" && <span className="active-indicator-line"></span>}
           </button>
 
-          <button onClick={() => scrollTo("how-it-works")}>
+          <button
+            className={`nav-link-btn ${activeSection === "how-it-works" ? "active" : ""}`}
+            onClick={() => scrollTo("how-it-works")}
+          >
             How It Works
+            {activeSection === "how-it-works" && <span className="active-indicator-line"></span>}
           </button>
 
-          <button onClick={() => scrollTo("opportunities")}>
+          <button
+            className={`nav-link-btn ${activeSection === "opportunities" ? "active" : ""}`}
+            onClick={() => scrollTo("opportunities")}
+          >
             Opportunities
+            {activeSection === "opportunities" && <span className="active-indicator-line"></span>}
           </button>
         </nav>
 
         <div className="nav-actions">
-          <button
-            className="nav-start-btn"
-            onClick={goLogin}
-          >
-            Get Started
+          {/* THEME SELECTOR PILL */}
+          <div className="nav-theme-pill" title="Switch visual theme">
+            <span className="theme-icon">🎨</span>
+            <select
+              value={theme}
+              onChange={(e) => setTheme(e.target.value)}
+              className="nav-theme-select"
+            >
+              {THEMES.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <button className="login-btn" onClick={goLogin}>
+            Sign In
+          </button>
+          <button className="nav-start-btn" onClick={goLogin}>
+            Get Started →
           </button>
         </div>
-
       </header>
 
-
-      {/* ================= HERO ================= */}
+      {/* ================= HERO SECTION ================= */}
       <main id="home">
-
         <section className="hero">
-
           <div className="hero-content">
-
-            <div className="hero-badge">
-              ✦ Career Intelligence Platform
-            </div>
+            <div className="hero-badge">✦ AI-Powered Career Intelligence</div>
 
             <h1>
               Turn Your
@@ -84,19 +204,12 @@ const HomePage = () => {
             </h1>
 
             <p className="hero-description">
-              GitBridge analyzes your GitHub profile, resume and skills
-              to help you discover better internships, jobs and personalized
-              career opportunities.
+              GitBridge analyzes your real GitHub repositories (public & private), ATS resume, and coding velocity to give you authentic developer scoring, Hinglish roasts, and high-match startup opportunities.
             </p>
 
             <div className="hero-buttons">
-
-              <button
-                className="primary-btn"
-                onClick={goLogin}
-              >
-                Get Started Free
-                <span>→</span>
+              <button className="primary-btn" onClick={goLogin}>
+                Get Started Free <span>→</span>
               </button>
 
               <button
@@ -105,12 +218,9 @@ const HomePage = () => {
               >
                 ▶ See How It Works
               </button>
-
             </div>
 
-
             <div className="hero-trust">
-
               <div className="avatars">
                 <span>👨🏻</span>
                 <span>👩🏻</span>
@@ -119,844 +229,375 @@ const HomePage = () => {
               </div>
 
               <div>
-                <strong>
-                  Built for ambitious developers
-                </strong>
-
-                <small>
-                  Analyze • Improve • Get Hired
-                </small>
+                <strong>Built for ambitious software engineers</strong>
+                <small>Analyze Repos • Detect Gaps • Get Hired</small>
               </div>
-
             </div>
-
           </div>
 
-
           {/* ================= RIGHT DASHBOARD MOCKUP ================= */}
-
           <div className="hero-visual">
-
             <div className="glow"></div>
 
             <div className="dashboard-window">
-
               <div className="window-top">
-
                 <div className="window-dots">
                   <i></i>
                   <i></i>
                   <i></i>
                 </div>
-
-                <span>
-                  GitBridge Dashboard
-                </span>
-
+                <span>GitBridge Career Intelligence</span>
                 <div></div>
-
               </div>
 
-
               <div className="dashboard-body">
-
                 <div className="dashboard-heading">
-
                   <div>
-                    <small>
-                      YOUR CAREER OVERVIEW
-                    </small>
-
-                    <h3>
-                      Profile Analysis
-                    </h3>
+                    <small>CAREER & SPECIALIZATION</small>
+                    <h3>DevOps & Cloud Infrastructure</h3>
                   </div>
-
-                  <span className="live-badge">
-                    ● Live
-                  </span>
-
+                  <span className="live-badge">● Live Sync</span>
                 </div>
 
-
                 <div className="dashboard-grid">
-
                   {/* Career Score */}
-
                   <div className="career-score-card">
-
-                    <p>
-                      Career Score
-                    </p>
-
+                    <p>ML Developer Score</p>
                     <div className="score-ring">
-
                       <div>
-                        <strong>
-                          84
-                        </strong>
-
-                        <small>
-                          /100
-                        </small>
+                        <strong>84</strong>
+                        <small>/100</small>
                       </div>
-
                     </div>
-
-                    <span className="good">
-                      ↗ Good Progress
-                    </span>
-
+                    <span className="good">↗ Top 10% Percentile</span>
                   </div>
 
-
                   {/* Right Cards */}
-
                   <div className="score-list">
-
                     <div className="dash-card github">
-
                       <div>
-                        <small>
-                          GitHub Score
-                        </small>
-
+                        <small>GitHub Quality</small>
                         <strong>
                           92<span>/100</span>
                         </strong>
-
-                        <em>
-                          +12 Improved
-                        </em>
+                        <em>20 Repos (Docker, K8s, HCL)</em>
                       </div>
-
-                      <div className="dash-icon">
-                        GH
-                      </div>
-
+                      <div className="dash-icon">⚡</div>
                     </div>
 
-
                     <div className="dash-card resume">
-
                       <div>
-                        <small>
-                          Resume Score
-                        </small>
-
+                        <small>ATS Match</small>
                         <strong>
                           88<span>/100</span>
                         </strong>
-
-                        <em>
-                          Excellent
-                        </em>
+                        <em>Parsed Keyword Matrix</em>
                       </div>
-
-                      <div className="dash-icon">
-                        CV
-                      </div>
-
+                      <div className="dash-icon">📄</div>
                     </div>
-
 
                     <div className="dash-card skills">
-
                       <div>
-                        <small>
-                          Skill Match
-                        </small>
-
+                        <small>Active Streak</small>
                         <strong>
-                          72<span>/100</span>
+                          7 Days<span> Active</span>
                         </strong>
-
-                        <em>
-                          Good Match
-                        </em>
+                        <em>Level 3 Engineer</em>
                       </div>
-
-                      <div className="dash-icon">
-                        ✓
-                      </div>
-
+                      <div className="dash-icon">🔥</div>
                     </div>
-
                   </div>
-
                 </div>
 
-
-                {/* ================= BOTTOM DASHBOARD ================= */}
-
+                {/* Bottom Bar */}
                 <div className="dashboard-bottom">
-
-                  <div className="mini-chart">
-
-                    <div className="mini-title">
-                      <span>
-                        Profile Strength
-                      </span>
-
-                      <strong>
-                        Excellent
-                      </strong>
-                    </div>
-
-                    <div className="bars">
-                      <i></i>
-                      <i></i>
-                      <i></i>
-                      <i></i>
-                      <i></i>
-                      <i></i>
-                      <i></i>
-                      <i></i>
-                      <i></i>
-                      <i></i>
-                    </div>
-
-                  </div>
-
-
                   <div className="ai-widget">
-
-                    <div className="ai-small">
-                      ✦ Insights
-                    </div>
-
-                    <strong>
-                      Hi there 👋
-                    </strong>
-
+                    <div className="ai-small">✦ Startup Matches</div>
+                    <strong>Zepto & Blinkit are hiring!</strong>
                     <p>
-                      We found <b>25+ opportunities</b>
-                      matching your profile.
+                      We matched <b>12 high-growth startup roles</b> with your stack.
                     </p>
-
-                    <button>
-                      View Matches →
-                    </button>
-
+                    <button onClick={goLogin}>View Matches →</button>
                   </div>
-
                 </div>
-
               </div>
-
             </div>
 
-
-            {/* Floating Notifications */}
-
+            {/* Floating Badges */}
             <div className="floating-notification notification-one">
-
-              <span>
-                ✓
-              </span>
-
+              <span>✓</span>
               <div>
-                <strong>
-                  Profile Strength
-                </strong>
-
-                <small>
-                  Excellent
-                </small>
+                <strong>Private Repos Synced 🔒</strong>
+                <small>Full IaC & Docker history evaluated</small>
               </div>
-
             </div>
-
 
             <div className="floating-notification notification-two">
-
-              <span>
-                💼
-              </span>
-
+              <span>💼</span>
               <div>
-                <strong>
-                  Internship
-                </strong>
-
-                <small>
-                  3 New Matches
-                </small>
+                <strong>Zepto Cloud Intern</strong>
+                <small>96% Match • ₹65k/month</small>
               </div>
-
             </div>
-
           </div>
-
         </section>
 
-
-        {/* ================= STATS ================= */}
-
+        {/* ================= STATS SECTION ================= */}
         <section className="stats-section">
-
           <div>
-            <strong>
-              10K+
-            </strong>
-
-            <span>
-              Profiles Analyzed
-            </span>
+            <strong>10K+</strong>
+            <span>Repositories Analyzed</span>
           </div>
-
           <div>
-            <strong>
-              2.5K+
-            </strong>
-
-            <span>
-              Opportunities Found
-            </span>
+            <strong>500+</strong>
+            <span>Startups & Companies</span>
           </div>
-
           <div>
-            <strong>
-              94%
-            </strong>
-
-            <span>
-              Profile Accuracy
-            </span>
+            <strong>94%</strong>
+            <span>ATS Parsing Accuracy</span>
           </div>
-
           <div>
-            <strong>
-              4.9/5
-            </strong>
-
-            <span>
-              User Rating
-            </span>
+            <strong>4.9/5</strong>
+            <span>Developer Satisfaction</span>
           </div>
-
         </section>
 
-
-        {/* ================= FEATURES ================= */}
-
-        <section
-          className="features-section"
-          id="features"
-        >
-
+        {/* ================= FEATURES SECTION ================= */}
+        <section className="features-section" id="features">
           <div className="section-heading">
-
-            <span>
-              POWERFUL FEATURES
-            </span>
-
+            <span>POWERFUL CAREER FEATURES</span>
             <h2>
               Everything you need to
               <br />
-              <b>build your career.</b>
+              <b>accelerate your engineering career.</b>
             </h2>
-
             <p>
-              GitBridge brings your GitHub, resume and career goals
-              together in one intelligent platform.
+              GitBridge brings your real GitHub repositories, ATS resume, and live startup opportunities together.
             </p>
-
           </div>
-
 
           <div className="features-grid">
-
             <div className="feature-card featured">
-
-              <div className="feature-icon purple">
-                ◉
-              </div>
-
-              <h3>
-                GitHub Profile Analysis
-              </h3>
-
+              <div className="feature-icon purple">◉</div>
+              <h3>Real GitHub Repository Analysis</h3>
               <p>
-                Analyze repositories, contributions, coding activity,
-                technologies and project quality to calculate your
-                GitHub career score.
+                Deeply scans repo names, commit velocity, languages (HCL, Python, Docker, JS), and includes private projects with 1-click token sync.
               </p>
-
-              <span className="feature-link">
-                Analyze your profile →
-              </span>
-
+              <span className="feature-link">Analyze your GitHub →</span>
             </div>
-
 
             <div className="feature-card">
-
-              <div className="feature-icon blue">
-                CV
-              </div>
-
-              <h3>
-                Resume Review
-              </h3>
-
+              <div className="feature-icon blue">📄</div>
+              <h3>Deep ATS Resume Engine</h3>
               <p>
-                Upload your resume and get useful feedback on
-                skills, experience, projects and ATS readiness.
+                Extracts skills categorized into Frontend, Backend, Database, Cloud/DevOps, and provides section completeness checks.
               </p>
-
-              <span className="feature-link">
-                Improve your resume →
-              </span>
-
+              <span className="feature-link">Score your resume →</span>
             </div>
-
 
             <div className="feature-card">
-
-              <div className="feature-icon green">
-                ✓
-              </div>
-
-              <h3>
-                Skill Gap Detection
-              </h3>
-
+              <div className="feature-icon orange">🔥</div>
+              <h3>Desi Hinglish AI Roast</h3>
               <p>
-                Discover which technical skills you are missing and
-                get a personalized roadmap to become job-ready.
+                A witty, humorous, and savage developer roast in authentic Hinglish based on your actual commits, stars, and private projects.
               </p>
-
-              <span className="feature-link">
-                Find skill gaps →
-              </span>
-
+              <span className="feature-link">Get roasted →</span>
             </div>
-
 
             <div className="feature-card">
-
-              <div className="feature-icon orange">
-                💼
-              </div>
-
-              <h3>
-                Smart Opportunities
-              </h3>
-
+              <div className="feature-icon green">💼</div>
+              <h3>Startup & Unicorn Opportunities</h3>
               <p>
-                Find internships and jobs based on your actual skills,
-                GitHub projects and resume.
+                Discover roles at high-growth Indian & global startups with real-time match scores and active hiring timelines.
               </p>
-
-              <span className="feature-link">
-                Explore opportunities →
-              </span>
-
+              <span className="feature-link">Explore opportunities →</span>
             </div>
-
           </div>
-
         </section>
-
 
         {/* ================= HOW IT WORKS ================= */}
-
-        <section
-          className="how-section"
-          id="how-it-works"
-        >
-
+        <section className="how-section" id="how-it-works">
           <div className="section-heading">
-
-            <span>
-              HOW IT WORKS
-            </span>
-
+            <span>STEP-BY-STEP WORKFLOW</span>
             <h2>
-              From profile to
-              <b> career opportunities.</b>
+              From repository commit to
+              <b> career milestone.</b>
             </h2>
-
-            <p>
-              Four simple steps to understand where you stand
-              and where you should go next.
-            </p>
-
+            <p>Four streamlined steps to understand where you stand and where to apply.</p>
           </div>
-
 
           <div className="steps">
-
             <div className="step">
-
-              <div className="step-number">
-                01
-              </div>
-
+              <div className="step-number">01</div>
               <div>
-                <h3>
-                  Connect GitHub
-                </h3>
-
-                <p>
-                  Connect your GitHub profile and analyze
-                  your coding activity and projects.
-                </p>
+                <h3>Connect GitHub</h3>
+                <p>Sync public and private repositories using username or personal access token.</p>
               </div>
-
             </div>
 
-
             <div className="step">
-
-              <div className="step-number">
-                02
-              </div>
-
+              <div className="step-number">02</div>
               <div>
-                <h3>
-                  Upload Resume
-                </h3>
-
-                <p>
-                  Upload your resume and extract your
-                  skills, experience and career profile.
-                </p>
+                <h3>Upload ATS Resume</h3>
+                <p>Upload PDF/DOCX resume to calculate recruiter keyword compatibility.</p>
               </div>
-
             </div>
 
-
             <div className="step">
-
-              <div className="step-number">
-                03
-              </div>
-
+              <div className="step-number">03</div>
               <div>
-                <h3>
-                  Get Profile Analysis
-                </h3>
-
-                <p>
-                  Receive your Career Score, skill gaps and
-                  personalized improvement suggestions.
-                </p>
+                <h3>AI Profile & Specialization</h3>
+                <p>Our classifier identifies your true role (DevOps, FullStack, Backend, AI/ML).</p>
               </div>
-
             </div>
 
-
             <div className="step">
-
-              <div className="step-number">
-                04
-              </div>
-
+              <div className="step-number">04</div>
               <div>
-                <h3>
-                  Discover Opportunities
-                </h3>
-
-                <p>
-                  Find internships and jobs that match your
-                  actual profile and career goals.
-                </p>
+                <h3>Apply to Matching Roles</h3>
+                <p>Apply directly to startups hiring your exact stack with 85%+ match scores.</p>
               </div>
-
             </div>
-
           </div>
-
         </section>
 
-
-        {/* ================= OPPORTUNITIES ================= */}
-
-        <section
-          className="opportunity-section"
-          id="opportunities"
-        >
-
+        {/* ================= OPPORTUNITIES PREVIEW (STARTUPS & TIMELINES) ================= */}
+        <section className="opportunity-section" id="opportunities">
           <div className="opportunity-content">
-
-            <span className="section-label">
-              SMART OPPORTUNITY MATCHING
-            </span>
-
+            <span className="section-label">STARTUPS & UNICORN HIRING</span>
             <h2>
-              Stop applying everywhere.
+              High-growth startups.
               <br />
-              <b>Start applying smarter.</b>
+              <b>Real-time hiring timelines.</b>
             </h2>
-
             <p>
-              GitBridge compares your profile against opportunities
-              and helps you understand which roles are actually
-              worth applying for.
+              GitBridge analyzes your actual GitHub stack and matches you with startups actively hiring right now.
             </p>
-
 
             <div className="check-list">
-
-              <span>
-                ✓ Personalized job recommendations
-              </span>
-
-              <span>
-                ✓ Skill-based matching
-              </span>
-
-              <span>
-                ✓ Internship recommendations
-              </span>
-
-              <span>
-                ✓ Career roadmap suggestions
-              </span>
-
+              <span>✓ Startup & Unicorn hiring sprint timelines</span>
+              <span>✓ Real GitHub stack matching (Kubernetes, React, Python)</span>
+              <span>✓ Direct 1-click application portals</span>
+              <span>✓ Interactive developer career roadmaps</span>
             </div>
 
-
-            <button
-              className="primary-btn"
-              onClick={goLogin}
-            >
+            <button className="primary-btn" onClick={goLogin}>
               Find My Opportunities →
             </button>
-
           </div>
-
 
           <div className="jobs-preview">
+            {STARTUP_PREVIEWS.map((job, idx) => (
+              <div className="job-card" key={idx}>
+                <div className="company-logo">{job.logo}</div>
+                <div className="job-info">
+                  <div className="job-company-row">
+                    <strong>{job.company}</strong>
+                    <span className="job-stage-pill">{job.stage}</span>
+                  </div>
+                  <h4 className="job-role-title">{job.role}</h4>
+                  <small className="job-timeline-text">{job.timeline}</small>
 
-            <div className="job-card">
-
-              <div className="company-logo">
-                G
-              </div>
-
-              <div className="job-info">
-
-                <strong>
-                  Frontend Developer Intern
-                </strong>
-
-                <span>
-                  Technology Company
-                </span>
-
-                <div className="job-tags">
-                  <small>React</small>
-                  <small>JavaScript</small>
-                  <small>Git</small>
+                  <div className="job-tags">
+                    {job.tags.map((t, i) => (
+                      <small key={i}>{t}</small>
+                    ))}
+                  </div>
                 </div>
-
+                <strong className="match">{job.match}</strong>
               </div>
-
-              <strong className="match">
-                94% Match
-              </strong>
-
-            </div>
-
-
-            <div className="job-card">
-
-              <div className="company-logo blue-logo">
-                AI
-              </div>
-
-              <div className="job-info">
-
-                <strong>
-                  AI/ML Developer
-                </strong>
-
-                <span>
-                  AI Startup
-                </span>
-
-                <div className="job-tags">
-                  <small>Python</small>
-                  <small>ML</small>
-                  <small>TensorFlow</small>
-                </div>
-
-              </div>
-
-              <strong className="match">
-                89% Match
-              </strong>
-
-            </div>
-
-
-            <div className="job-card">
-
-              <div className="company-logo green-logo">
-                D
-              </div>
-
-              <div className="job-info">
-
-                <strong>
-                  Full Stack Developer
-                </strong>
-
-                <span>
-                  Software Company
-                </span>
-
-                <div className="job-tags">
-                  <small>React</small>
-                  <small>Node.js</small>
-                  <small>MongoDB</small>
-                </div>
-
-              </div>
-
-              <strong className="match">
-                86% Match
-              </strong>
-
-            </div>
-
+            ))}
           </div>
-
         </section>
 
-
-        {/* ================= CTA ================= */}
-
-        <section
-          className="cta-section"
-          id="cta"
-        >
-
+        {/* ================= CTA SECTION ================= */}
+        <section className="cta-section" id="cta">
           <div className="cta-glow"></div>
-
-          <span>
-            READY TO LEVEL UP?
-          </span>
-
+          <span>READY TO TAKE THE NEXT STEP?</span>
           <h2>
-            Your next opportunity
+            Your next engineering opportunity
             <br />
-            starts with your profile.
+            starts with your code.
           </h2>
-
-          <p>
-            Analyze your GitHub. Improve your resume.
-            Discover your next career opportunity.
-          </p>
-
-          <button
-            className="cta-btn"
-            onClick={goLogin}
-          >
-            Start Your Career Analysis →
+          <p>Analyze your GitHub. Optimize your ATS score. Land interviews at top tech startups.</p>
+          <button className="cta-btn" onClick={goLogin}>
+            Start Your Career Intelligence Free →
           </button>
-
         </section>
 
-
-        {/* ================= FOOTER ================= */}
-
+        {/* ================= FOOTER WITH HELP CENTER ================= */}
         <footer className="footer">
-
-          <div className="footer-brand">
-
-            <div className="brand">
-
-              <div className="brand-logo">
-                ◆
+          <div className="footer-top-row">
+            <div className="footer-brand">
+              <div className="brand">
+                <div className="brand-logo">⚡</div>
+                <span>
+                  GitBridge <b>Careers</b>
+                </span>
               </div>
-
-              <span>
-                GitBridge <b>AI</b>
-              </span>
-
+              <p>Career intelligence for ambitious software engineers and tech startups.</p>
             </div>
 
-            <p>
-              Career intelligence for the next generation
-              of developers.
-            </p>
-
+            {/* HELP CENTER SEARCH INPUT IN FOOTER */}
+            <div className="footer-help-box">
+              <strong>Need Help or Have Questions?</strong>
+              <p>Ask anything about GitHub analysis, private repos, or ATS resumes.</p>
+              <form onSubmit={handleHelpSubmit} className="help-search-form">
+                <input
+                  type="text"
+                  placeholder="Help Center • Ask questions or search guides..."
+                  value={helpQuery}
+                  onChange={(e) => setHelpQuery(e.target.value)}
+                  className="help-input"
+                />
+                <button type="submit" className="help-submit-btn">
+                  Ask Support →
+                </button>
+              </form>
+              {helpNotice && <small className="help-notice-text">{helpNotice}</small>}
+            </div>
           </div>
-
 
           <div className="footer-links">
-
             <div>
-              <strong>
-                Product
-              </strong>
-
-              <span>
-                Features
-              </span>
-
-              <span>
-                Opportunities
-              </span>
-
-              <span>
-                How It Works
-              </span>
+              <strong>Product</strong>
+              <span onClick={() => scrollTo("features")}>Features</span>
+              <span onClick={() => scrollTo("opportunities")}>Opportunities</span>
+              <span onClick={() => scrollTo("how-it-works")}>How It Works</span>
+              <span onClick={goLogin}>Theme Switcher</span>
             </div>
 
-
             <div>
-              <strong>
-                Company
-              </strong>
-
-              <span>
-                About
-              </span>
-
-              <span>
-                Contact
-              </span>
-
-              <span>
-                Privacy
-              </span>
+              <strong>Specializations</strong>
+              <span>DevOps & Cloud</span>
+              <span>Full-Stack Web</span>
+              <span>Backend & Systems</span>
+              <span>AI / ML Engineering</span>
             </div>
 
-
             <div>
-              <strong>
-                Connect
-              </strong>
-
-              <span>
-                GitHub
-              </span>
-
-              <span>
-                LinkedIn
-              </span>
-
-              <span>
-                Instagram
-              </span>
+              <strong>Resources</strong>
+              <span onClick={goLogin}>Help Center</span>
+              <span onClick={goLogin}>Private Repos Guide</span>
+              <span onClick={goLogin}>ATS Resume Checklist</span>
+              <span onClick={goLogin}>Hinglish Roast</span>
             </div>
 
+            <div>
+              <strong>Connect</strong>
+              <a href="https://github.com/amrut029/GitBridge-Careers" target="_blank" rel="noreferrer">
+                GitHub Repository ↗
+              </a>
+              <span>LinkedIn</span>
+              <span>Discord Community</span>
+            </div>
           </div>
-
         </footer>
 
-
         <div className="copyright">
-          © 2026 GitBridge AI. Built for developers.
+          © 2026 GitBridge Careers. Built with ⚡ for developers worldwide.
         </div>
-
       </main>
-
     </div>
   );
 };

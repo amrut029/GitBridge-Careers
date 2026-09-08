@@ -2666,3 +2666,282 @@ button {
     grid-template-columns: 1fr;
   }
 }
+
+/* ================= MODAL STYLES (HELP CENTER) ================= */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: modalFadeIn 0.2s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  width: 100%;
+  max-width: 620px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), 0 0 30px var(--accent-glow);
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  animation: modalSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalSlideUp {
+  from { transform: translateY(20px) scale(0.97); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.modal-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: 16px;
+}
+
+.modal-head h3 {
+  margin: 0 0 4px;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.modal-head p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.modal-close-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.modal-close-btn:hover {
+  background: var(--panel2);
+  color: var(--text);
+  border-color: var(--purple2);
+}
+
+.help-modal-faqs {
+  background: var(--panel2);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.help-modal-faqs strong {
+  font-size: 13px;
+  color: var(--text);
+}
+
+.faq-item {
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.faq-item b {
+  color: var(--purple2);
+  display: block;
+  margin-bottom: 2px;
+}
+
+.faq-item p {
+  margin: 0;
+  color: var(--text-dim);
+}
+
+.faq-item code {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 2px 5px;
+  border-radius: 4px;
+  color: var(--yellow);
+}
+
+.help-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.help-modal-form label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.help-modal-form textarea {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  resize: vertical;
+  min-height: 90px;
+}
+
+.help-modal-form textarea:focus {
+  outline: none;
+  border-color: var(--purple2);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/* ================= PROFILE EDIT FORM & SETTINGS ================= */
+.profile-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-top: 14px;
+}
+
+.profile-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+@media (max-width: 640px) {
+  .profile-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-group label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
+.form-group input,
+.form-group textarea {
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--purple2);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.save-profile-btn {
+  align-self: flex-start;
+  padding: 11px 24px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* ================= SIDEBAR BOTTOM HELP ================= */
+.sidebar-bottom-help {
+  margin-top: auto;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-light);
+}
+
+.help-trigger-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(139, 77, 232, 0.08);
+  border: 1px solid rgba(139, 77, 232, 0.2);
+  color: var(--text-dim);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.help-trigger-btn:hover {
+  background: rgba(139, 77, 232, 0.18);
+  color: var(--text);
+  border-color: var(--purple2);
+}
+
+.help-icon {
+  font-size: 16px;
+}
+
+/* ================= OPPORTUNITY TIMELINE & STAGES ================= */
+.opp-timeline-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(255, 202, 58, 0.12);
+  border: 1px solid rgba(255, 202, 58, 0.3);
+  color: var(--yellow);
+  font-size: 11px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.stage-tag {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: var(--blue);
+}
+

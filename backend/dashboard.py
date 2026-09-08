@@ -42,32 +42,144 @@ GITHUB_REDIRECT_URI = os.getenv(
 UPLOAD_DIR = Path("uploads/resumes")
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
-# Comprehensive Live Opportunities Catalog (DevOps, Cloud, FullStack, Backend, Frontend, AI/ML)
+# Comprehensive Live Opportunities Catalog with High-Growth Startups & Hiring Timelines
 OPPORTUNITIES_CATALOG = [
     {
-        "id": "opp_devops_1",
+        "id": "opp_startup_1",
         "title": "Cloud & DevOps Engineer Intern",
+        "company": "Zepto",
+        "logo": "⚡",
+        "location": "Bengaluru / Mumbai (Hybrid)",
+        "type": "Internship",
+        "domain": "devops",
+        "stage": "🦄 Quick-Commerce Unicorn",
+        "hiring_timeline": "⚡ Hiring Sprint: Q1/Q2 2026 (48-hr turnaround)",
+        "stipend": "₹50,000 - ₹65,000 / month",
+        "experience": "0-1 Years / 2025-2026 Batch",
+        "required_skills": ["Kubernetes", "Docker", "Terraform", "Linux", "CI/CD", "AWS"],
+        "description": "Scale 10-minute grocery delivery infrastructure, optimize Kubernetes pod autoscaling, and automate Terraform CI/CD pipelines.",
+        "apply_url": "https://www.zeptonow.com/careers",
+        "deadline": "Immediate Hiring",
+        "featured": True
+    },
+    {
+        "id": "opp_startup_2",
+        "title": "Junior Platform & SRE Engineer",
+        "company": "Blinkit",
+        "logo": "🟡",
+        "location": "Gurugram / Hybrid",
+        "type": "Full-Time",
+        "domain": "devops",
+        "stage": "🚀 Zomato Group Startup",
+        "hiring_timeline": "Active Now • Batch 2024/2025/2026",
+        "stipend": "₹14 - ₹20 LPA",
+        "experience": "0-2 Years",
+        "required_skills": ["Docker", "Kubernetes", "Linux", "Jenkins", "Terraform", "Shell", "Git"],
+        "description": "Maintain sub-second checkout reliability, configure Prometheus/Grafana observability alerts, and manage cloud clusters.",
+        "apply_url": "https://blinkit.com/careers",
+        "deadline": "Open Now",
+        "featured": True
+    },
+    {
+        "id": "opp_startup_3",
+        "title": "AI Infrastructure & MLOps Engineer",
+        "company": "Sarvam AI",
+        "logo": "🧠",
+        "location": "Bengaluru / Remote",
+        "type": "Full-Time",
+        "domain": "ai_ml",
+        "stage": "🚀 Series A ($41M Funded)",
+        "hiring_timeline": "Hiring Actively for Sovereign Indic LLMs",
+        "stipend": "₹18 - ₹28 LPA",
+        "experience": "0-3 Years",
+        "required_skills": ["Python", "Kubernetes", "Docker", "Machine Learning", "FastAPI", "Linux"],
+        "description": "Build high-performance GPU training clusters and inference microservices for India's foundational AI models.",
+        "apply_url": "https://www.sarvam.ai/careers",
+        "deadline": "Hiring Fast",
+        "featured": True
+    },
+    {
+        "id": "opp_startup_4",
+        "title": "Backend / API Developer Intern",
+        "company": "Slice",
+        "logo": "🍕",
+        "location": "Bengaluru",
+        "type": "Internship",
+        "domain": "backend",
+        "stage": "🦄 Fintech Unicorn (Digital Bank)",
+        "hiring_timeline": "🎓 College Final Year & 2026 Batch",
+        "stipend": "₹45,000 / month",
+        "experience": "Freshers / 0-1 Years",
+        "required_skills": ["Python", "FastAPI", "PostgreSQL", "MongoDB", "REST API", "Git"],
+        "description": "Design transaction processing microservices with zero downtime, high security, and low latency.",
+        "apply_url": "https://sliceit.com/careers",
+        "deadline": "Rolling Applications",
+        "featured": False
+    },
+    {
+        "id": "opp_startup_5",
+        "title": "Web3 & Cloud Infrastructure Developer",
+        "company": "Polygon Labs",
+        "logo": "🟣",
+        "location": "Remote (Global / India)",
+        "type": "Full-Time",
+        "domain": "devops",
+        "stage": "🌐 Leading Ethereum Layer-2 Ecosystem",
+        "hiring_timeline": "Immediate Remote Hiring Sprint",
+        "stipend": "₹16 - ₹26 LPA ($30k - $45k USD)",
+        "experience": "1-3 Years",
+        "required_skills": ["Linux", "Docker", "Kubernetes", "Go", "Terraform", "Git"],
+        "description": "Deploy validator nodes, automate rollup infrastructure, and manage distributed zero-knowledge proof clusters.",
+        "apply_url": "https://polygon.technology/careers",
+        "deadline": "Open",
+        "featured": True
+    },
+    {
+        "id": "opp_startup_6",
+        "title": "Frontend React Engineer",
+        "company": "Appsmith",
+        "logo": "🛠️",
+        "location": "Remote (India)",
+        "type": "Full-Time",
+        "domain": "frontend",
+        "stage": "⭐ Open-Source Leader ($50M+ Raised)",
+        "hiring_timeline": "Active Q1/Q2 2026 Developer Drive",
+        "stipend": "₹12 - ₹18 LPA",
+        "experience": "0-2 Years",
+        "required_skills": ["React", "TypeScript", "JavaScript", "Redux", "Tailwind", "HTML", "CSS"],
+        "description": "Build drag-and-drop internal tool builders used by over 100,000 developers worldwide.",
+        "apply_url": "https://www.appsmith.com/careers",
+        "deadline": "Active",
+        "featured": False
+    },
+    {
+        "id": "opp_corp_1",
+        "title": "Cloud & DevOps Intern",
         "company": "Groww",
         "logo": "🌱",
         "location": "Bengaluru / Hybrid",
         "type": "Internship",
         "domain": "devops",
-        "stipend": "₹40,000 - ₹55,000 / month",
-        "experience": "0-1 Years / Freshers",
+        "stage": "📈 Top Investment Platform",
+        "hiring_timeline": "Active 2025/2026 Campus & Off-Campus",
+        "stipend": "₹40,000 / month",
+        "experience": "0-1 Years",
         "required_skills": ["Kubernetes", "Docker", "Terraform", "Linux", "CI/CD", "AWS"],
         "description": "Automate Kubernetes multi-cluster infrastructure, maintain Terraform IaC modules, and configure Jenkins CI/CD deployment pipelines.",
         "apply_url": "https://groww.in/careers",
-        "deadline": "Active (Immediate)",
+        "deadline": "Active",
         "featured": True
     },
     {
-        "id": "opp_devops_2",
+        "id": "opp_corp_2",
         "title": "Junior DevOps & Infrastructure Engineer",
         "company": "Razorpay",
         "logo": "💳",
         "location": "Bengaluru (Hybrid)",
         "type": "Full-Time",
         "domain": "devops",
+        "stage": "💳 Payments Pioneer",
+        "hiring_timeline": "Immediate Hiring",
         "stipend": "₹12 - ₹18 LPA",
         "experience": "0-2 Years",
         "required_skills": ["Docker", "Kubernetes", "Linux", "Jenkins", "Terraform", "Shell", "Git"],
@@ -75,102 +187,6 @@ OPPORTUNITIES_CATALOG = [
         "apply_url": "https://razorpay.com/jobs",
         "deadline": "Open Now",
         "featured": True
-    },
-    {
-        "id": "opp_devops_3",
-        "title": "Site Reliability Engineer (SRE-1)",
-        "company": "CRED",
-        "logo": "💎",
-        "location": "Bengaluru",
-        "type": "Full-Time",
-        "domain": "devops",
-        "stipend": "₹15 - ₹24 LPA",
-        "experience": "1-3 Years",
-        "required_skills": ["Kubernetes", "AWS", "Terraform", "Linux", "Python", "Docker"],
-        "description": "Ensure 99.99% system availability, optimize autoscaling for high-concurrency payment events, and harden cloud network security.",
-        "apply_url": "https://cred.club/careers",
-        "deadline": "Active",
-        "featured": False
-    },
-    {
-        "id": "opp_fullstack_1",
-        "title": "Full-Stack Web Engineer Intern",
-        "company": "Swiggy",
-        "logo": "🍔",
-        "location": "Bengaluru / Remote",
-        "type": "Internship",
-        "domain": "fullstack",
-        "stipend": "₹35,000 - ₹50,000 / month",
-        "experience": "Students / Freshers",
-        "required_skills": ["React", "JavaScript", "Python", "FastAPI", "MongoDB", "Git"],
-        "description": "Build responsive merchant dashboards and scalable backend APIs serving millions of real-time orders.",
-        "apply_url": "https://careers.swiggy.com",
-        "deadline": "Rolling",
-        "featured": True
-    },
-    {
-        "id": "opp_backend_1",
-        "title": "Junior Backend Developer (Python / FastAPI)",
-        "company": "Postman",
-        "logo": "🚀",
-        "location": "Remote (India)",
-        "type": "Full-Time",
-        "domain": "backend",
-        "stipend": "₹10 - ₹16 LPA",
-        "experience": "0-2 Years",
-        "required_skills": ["Python", "FastAPI", "PostgreSQL", "Docker", "REST API", "Git"],
-        "description": "Build high-throughput developer tooling APIs and collaborative workspace sync engines.",
-        "apply_url": "https://www.postman.com/company/careers",
-        "deadline": "Active Now",
-        "featured": True
-    },
-    {
-        "id": "opp_frontend_1",
-        "title": "Frontend UI/UX Engineer",
-        "company": "Zerodha (Kite)",
-        "logo": "📈",
-        "location": "Bengaluru / Hybrid",
-        "type": "Full-Time",
-        "domain": "frontend",
-        "stipend": "₹10 - ₹17 LPA",
-        "experience": "1-3 Years",
-        "required_skills": ["React", "TypeScript", "JavaScript", "Redux", "CSS", "Tailwind"],
-        "description": "Create sub-second latency financial charts and trading interfaces with clean UX and accessible design.",
-        "apply_url": "https://zerodha.com/careers",
-        "deadline": "Open",
-        "featured": False
-    },
-    {
-        "id": "opp_aiml_1",
-        "title": "AI / ML & Agentic Systems Intern",
-        "company": "Hugging Face Partner Labs",
-        "logo": "🤗",
-        "location": "Remote",
-        "type": "Internship",
-        "domain": "ai_ml",
-        "stipend": "₹45,000 / month",
-        "experience": "Students / Freshers",
-        "required_skills": ["Python", "Machine Learning", "FastAPI", "Docker", "Git"],
-        "description": "Build autonomous agent pipelines, optimize vector search retrieval, and fine-tune open-weight models.",
-        "apply_url": "https://huggingface.co/jobs",
-        "deadline": "Apply Fast",
-        "featured": True
-    },
-    {
-        "id": "opp_frontend_2",
-        "title": "React.js Developer Intern",
-        "company": "Zomato",
-        "logo": "🍕",
-        "location": "Gurugram / Hybrid",
-        "type": "Internship",
-        "domain": "frontend",
-        "stipend": "₹30,000 - ₹45,000 / month",
-        "experience": "0-1 Years",
-        "required_skills": ["React", "JavaScript", "HTML", "CSS", "Tailwind"],
-        "description": "Develop customer-facing quick-commerce ordering flows and real-time order tracking pages.",
-        "apply_url": "https://www.zomato.com/careers",
-        "deadline": "Rolling",
-        "featured": False
     }
 ]
 
@@ -232,6 +248,11 @@ def serialize_user(user):
         "id": str(user["_id"]),
         "name": user.get("name") or user.get("email", "").split("@")[0],
         "email": user.get("email"),
+        "target_role": user.get("target_role", ""),
+        "location_pref": user.get("location_pref", ""),
+        "phone": user.get("phone", ""),
+        "linkedin_url": user.get("linkedin_url", ""),
+        "bio": user.get("bio", ""),
         "github": safe_github,
         "resume": resume,
         "roast": user.get("roast"),
@@ -251,7 +272,7 @@ def create_github_oauth_state(user_id: str):
 
 
 # =========================================================
-# GITHUB DATA FETCHER (SUPPORTS BOTH PUBLIC & PRIVATE REPOS)
+# GITHUB DATA FETCHER
 # =========================================================
 async def fetch_github_user_data(username: str = None, access_token: str = None):
     headers = {
@@ -290,7 +311,7 @@ async def fetch_github_user_data(username: str = None, access_token: str = None)
         profile = profile_res.json()
         current_username = profile.get("login")
 
-        # 2. Fetch Repositories (Public + Private if token provided)
+        # 2. Fetch Repositories
         if token:
             repos_res = await client.get(
                 "https://api.github.com/user/repos",
@@ -380,6 +401,92 @@ def get_dashboard(authorization: str = Header(None)):
 
 
 # =========================================================
+# UPDATE PROFILE / ONBOARDING INFO (SAVES TO MONGODB)
+# =========================================================
+@router.post("/profile")
+def update_profile(
+    payload: dict = Body(...),
+    authorization: str = Header(None)
+):
+    user = get_current_user(authorization)
+    name = payload.get("name", "").strip()
+    target_role = payload.get("target_role", "").strip()
+    location_pref = payload.get("location_pref", "").strip()
+    phone = payload.get("phone", "").strip()
+    linkedin_url = payload.get("linkedin_url", "").strip()
+    bio = payload.get("bio", "").strip()
+
+    update_fields = {"updated_at": datetime.utcnow().isoformat()}
+    if name:
+        update_fields["name"] = name
+    if target_role:
+        update_fields["target_role"] = target_role
+    if location_pref:
+        update_fields["location_pref"] = location_pref
+    if phone:
+        update_fields["phone"] = phone
+    if linkedin_url:
+        update_fields["linkedin_url"] = linkedin_url
+    if bio:
+        update_fields["bio"] = bio
+
+    users = get_users_collection()
+    users.update_one(
+        {"_id": user["_id"]},
+        {"$set": update_fields}
+    )
+
+    updated_user = users.find_one({"_id": user["_id"]})
+    return {
+        "message": "Profile updated successfully!",
+        "user": serialize_user(updated_user)
+    }
+
+
+# =========================================================
+# SUBMIT HELP CENTER QUERY (SAVES TO NOTIFICATIONS & DB)
+# =========================================================
+@router.post("/help")
+def submit_help_query(
+    payload: dict = Body(...),
+    authorization: str = Header(None)
+):
+    user = get_current_user(authorization)
+    query = payload.get("query", "").strip()
+    email = payload.get("email") or user.get("email")
+
+    if not query:
+        raise HTTPException(status_code=400, detail="Query message cannot be empty.")
+
+    notification = {
+        "id": f"hlp_{int(datetime.utcnow().timestamp())}",
+        "title": "Help Ticket Submitted",
+        "message": f"Your ticket '{query[:40]}...' was received. Our team will follow up via {email}.",
+        "time": datetime.utcnow().isoformat(),
+        "read": False
+    }
+
+    users = get_users_collection()
+    users.update_one(
+        {"_id": user["_id"]},
+        {
+            "$push": {
+                "notifications": {
+                    "$each": [notification],
+                    "$position": 0,
+                    "$slice": 15
+                }
+            }
+        }
+    )
+
+    return {
+        "message": "Help inquiry submitted successfully! A support engineer will reply shortly.",
+        "query": query
+    }
+
+
+# =========================================================
 # GET OPPORTUNITIES (ACCURATE REAL-DATA MATCH SCORING)
 # =========================================================
 @router.get("/opportunities")
@@ -427,7 +534,6 @@ def get_opportunities(authorization: str = Header(None)):
                     matched_skills.append(req)
 
             match_ratio = len(matched_skills) / max(len(required), 1)
-            # Match score: 40% baseline + match ratio * 56
             match_pct = int(np.clip(round(40 + match_ratio * 56), 35, 96))
 
         scored_opportunities.append({
@@ -447,7 +553,7 @@ def get_opportunities(authorization: str = Header(None)):
 
 
 # =========================================================
-# CONNECT / CHANGE GITHUB PROFILE (USERNAME OR TOKEN)
+# CONNECT / CHANGE GITHUB PROFILE
 # =========================================================
 @router.post("/github/connect")
 async def connect_github(
@@ -502,7 +608,7 @@ async def connect_github(
 
 
 # =========================================================
-# GITHUB OAUTH (FOR 1-CLICK PRIVATE + PUBLIC AUTHORIZATION)
+# GITHUB OAUTH
 # =========================================================
 @router.get("/github/connect-url")
 def github_connect_url(authorization: str = Header(None)):
@@ -756,7 +862,7 @@ def delete_resume(authorization: str = Header(None)):
 
 
 # =========================================================
-# GENERATE HINGLISH AI ROAST (LOCKED UNTIL GITHUB + RESUME EXIST)
+# GENERATE HINGLISH AI ROAST (WORKS WITH GITHUB OR RESUME)
 # =========================================================
 @router.post("/roast")
 def generate_roast_endpoint(authorization: str = Header(None)):
@@ -765,20 +871,14 @@ def generate_roast_endpoint(authorization: str = Header(None)):
     github = user.get("github")
     resume = user.get("resume")
 
-    if not github or not github.get("username"):
+    if not github and not resume:
         raise HTTPException(
             status_code=400,
-            detail="Connect your GitHub account first before generating a roast."
+            detail="Connect your GitHub account or upload your resume first to generate a roast."
         )
 
-    if not resume:
-        raise HTTPException(
-            status_code=400,
-            detail="Upload your resume first before generating a roast."
-        )
-
-    username = github.get("username", "developer")
-    stats = github.get("stats", {})
+    username = github.get("username", "developer") if github else user.get("name", "developer")
+    stats = github.get("stats", {}) if github else {}
     repo_count = stats.get("repositories", 0)
     stars = stats.get("stars", 0)
     forks = stats.get("forks", 0)
@@ -787,18 +887,18 @@ def generate_roast_endpoint(authorization: str = Header(None)):
     languages = list(stats.get("languages", {}).keys())
     top_language = languages[0] if languages else "Code"
 
-    resume_skills = resume.get("skills", [])
-    ats_score = resume.get("ats_score", 70)
+    resume_skills = resume.get("skills", []) if resume else []
+    ats_score = resume.get("ats_score", 0) if resume else 0
 
     # Authentic, witty & savage Hinglish roast punchlines
     punchlines = []
 
     # 1. Opening & Repo Count
-    if repo_count == 0:
+    if repo_count == 0 and not resume:
         punchlines.append(
             f"Bhai @{username}, GitHub account banaya par ek bhi repository nahi daali? Lagta hai README file bhi commit hone se darr rahi hai! 😂💀"
         )
-    elif repo_count < 4:
+    elif repo_count < 4 and repo_count > 0:
         punchlines.append(
             f"Arre bhai @{username}, kul milakar {repo_count} repos? Ye developer ka portfolio hai ya college ka ek assignment draft? 😭"
         )
@@ -806,9 +906,9 @@ def generate_roast_endpoint(authorization: str = Header(None)):
         punchlines.append(
             f"Bhai @{username}, {repo_count} repositories?! Aadhi repos me toh khud tujhe nahi pata hoga ki code kyu likha tha... Poora graveyard bana rakha hai! 💀🚀"
         )
-    else:
+    elif repo_count > 0:
         punchlines.append(
-            f"Arre wah @{username}, {repo_count} repositories hain! Par commit history dekh kar lagta hai saare commit messages me bas 'fix bug', 'final push', aur 'ab chal gaya' hi likha hai! 😂"
+            f"Arre wah @{username}, {repo_count} repositories hain! Par commit history dekh kar lagta hai saare commit messages me bas 'fix bug', 'final push', aur 'ab pakka chal gaya' hi likha hai! 😂"
         )
 
     # 2. Private Repos Punchline
@@ -816,21 +916,21 @@ def generate_roast_endpoint(authorization: str = Header(None)):
         punchlines.append(
             f"Aur ye jo {private_count} private repos chupa ke rakhi hain 🔒... usme kya NASA ka secret code hai ya adhoore YouTube tutorial ke copy-paste projects? Sach bata! 🤫😂"
         )
-    else:
+    elif repo_count > 0:
         punchlines.append(
             "Ek bhi private repo nahi hai? Ya toh tu 100% open source lover hai ya phir code itna khatarnak hai ki kisi ko dikha hi nahi sakte! 🚀"
         )
 
     # 3. Stars & Popularity Punchline
-    if stars == 0:
+    if stars == 0 and repo_count > 0:
         punchlines.append(
             "GitHub par 0 stars ⭐... Tension mat le bhai, agar mummy ka GitHub account hota toh wo zaroor star kar deti! 😂❤️"
         )
-    elif stars < 5:
+    elif stars < 5 and stars > 0:
         punchlines.append(
             f"Total {stars} stars mile hain? Sach bolna, unme se ek toh tere doosre fake account ka hi star hoga na! 😉⭐"
         )
-    else:
+    elif stars >= 5:
         punchlines.append(
             f"{stars} stars dekh kar toh lagta hai thoda bahut swag hai market me! Par production me console.log hatana mat bhulna! 🚀"
         )
@@ -839,7 +939,11 @@ def generate_roast_endpoint(authorization: str = Header(None)):
     if resume_skills:
         skill_sample = ", ".join(resume_skills[:3])
         punchlines.append(
-            f"Resume me toh bade confidence se likha hai '{skill_sample}', aur ATS score {ats_score}/100 laaye ho, par GitHub par {top_language} ke centering div me 2 ghante barbaad ho jaate hain! 💀😎"
+            f"Resume me toh bade confidence se likha hai '{skill_sample}', aur ATS score {ats_score}/100 laaye ho, par terminal me permission denied aate hi darr jaate ho! 💀😎"
+        )
+    elif not resume:
+        punchlines.append(
+            "Abhi tak resume upload nahi kiya? Lagta hai resume me 'hardworking' ke alawa likhne ke liye skills dhoondh rahe ho! 😂📄"
         )
 
     # 5. Savage Closing Advice
@@ -848,7 +952,7 @@ def generate_roast_endpoint(authorization: str = Header(None)):
         "Final Verdict: Mehnat 10/10 hai par testing 0/10! StackOverflow ko thoda rest do aur code ko production me bina dare deploy karo! ⚡💥",
         "Final Verdict: Portfolio me dam hai, bass thoda daily commits ka streak banao aur recruiter ke inbox me aag laga do! 🚀🎯"
     ]
-    punchlines.append(random.choice(closings))
+    punchlines.append(closings[0])
 
     roast_text = " ".join(punchlines)
 

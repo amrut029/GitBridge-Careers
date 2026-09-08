@@ -33,6 +33,18 @@ async function request(path, options = {}) {
 
 export const getDashboard = () => request("/me");
 
+export const updateProfile = (profileData) =>
+  request("/profile", {
+    method: "POST",
+    body: JSON.stringify(profileData),
+  });
+
+export const submitHelpQuery = (query, email = "") =>
+  request("/help", {
+    method: "POST",
+    body: JSON.stringify({ query, email }),
+  });
+
 export const getOpportunities = () => request("/opportunities");
 
 export const connectGithub = (username, token = "") =>

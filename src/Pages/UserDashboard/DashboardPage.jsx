@@ -12,6 +12,8 @@ import {
   getGithubOAuthUrl,
   getOpportunities,
   refreshGithub,
+  submitHelpQuery,
+  updateProfile,
   uploadResume,
 } from "../../Services/dashboardApi";
 
@@ -136,6 +138,20 @@ export default function DashboardPage() {
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
 
+  // Help Center Modal State
+  const [helpModalOpen, setHelpModalOpen] = useState(false);
+  const [helpQueryText, setHelpQueryText] = useState("");
+  const [helpSubmitting, setHelpSubmitting] = useState(false);
+
+  // Profile Edit State (Saves to MongoDB)
+  const [profileName, setProfileName] = useState("");
+  const [profileTargetRole, setProfileTargetRole] = useState("");
+  const [profileLocation, setProfileLocation] = useState("");
+  const [profilePhone, setProfilePhone] = useState("");
+  const [profileLinkedIn, setProfileLinkedIn] = useState("");
+  const [profileBio, setProfileBio] = useState("");
+  const [profileSaving, setProfileSaving] = useState(false);
+
   // GitHub input state
   const [githubInput, setGithubInput] = useState("");
   const [githubTokenInput, setGithubTokenInput] = useState("");
@@ -243,6 +259,14 @@ export default function DashboardPage() {
       const response = await getDashboard();
       setData(response);
 
+      // Populate profile state
+      setProfileName(response.name || "");
+      setProfileTargetRole(response.target_role || "");
+      setProfileLocation(response.location_pref || "");
+      setProfilePhone(response.phone || "");
+      setProfileLinkedIn(response.linkedin_url || "");
+      setProfileBio(response.bio || "");
+
       // Auto-set roadmap to user's analyzed domain
       if (response?.ml_insights?.domain_id && DEFAULT_ROADMAPS[response.ml_insights.domain_id]) {
         setSelectedRoadmap(response.ml_insights.domain_id);
@@ -268,6 +292,50 @@ export default function DashboardPage() {
       console.error("Opportunities fetch error:", err);
     } finally {
       setOppsLoading(false);
+    }
+  };
+
+  const handleSaveProfile = async (e) => {
+    e?.preventDefault();
+    try {
+      setProfileSaving(true);
+      const res = await updateProfile({
+        name: profileName,
+        target_role: profileTargetRole,
+        location_pref: profileLocation,
+        phone: profilePhone,
+        linkedin_url: profileLinkedIn,
+        bio: profileBio,
+      });
+
+      setData((prev) => ({
+        ...prev,
+        ...res.user,
+      }));
+
+      showNotification("Profile details saved to MongoDB successfully! ✅", "success");
+    } catch (err) {
+      showNotification(err.message, "error");
+    } finally {
+      setProfileSaving(false);
+    }
+  };
+
+  const handleHelpSubmit = async (e) => {
+    e?.preventDefault();
+    if (!helpQueryText.trim()) return;
+
+    try {
+      setHelpSubmitting(true);
+      await submitHelpQuery(helpQueryText, data?.email);
+      showNotification("Help ticket submitted! Our support team will follow up via email. 📩", "success");
+      setHelpQueryText("");
+      setHelpModalOpen(false);
+      await loadDashboard();
+    } catch (err) {
+      showNotification(err.message, "error");
+    } finally {
+      setHelpSubmitting(false);
     }
   };
 
@@ -305,6 +373,7 @@ export default function DashboardPage() {
         !oppSearch ||
         opp.title.toLowerCase().includes(oppSearch.toLowerCase()) ||
         opp.company.toLowerCase().includes(oppSearch.toLowerCase()) ||
+        (opp.stage && opp.stage.toLowerCase().includes(oppSearch.toLowerCase())) ||
         opp.required_skills.some((s) => s.toLowerCase().includes(oppSearch.toLowerCase()));
 
       return matchType && matchQuery;
@@ -340,7 +409,6 @@ export default function DashboardPage() {
     return bookmarks.some((b) => b.key === key);
   };
 
-  // Toggle Milestone status
   const toggleMilestone = (stepId) => {
     setUserMilestones((prev) => {
       const current = prev[stepId] || "in_progress";
@@ -349,7 +417,6 @@ export default function DashboardPage() {
     });
   };
 
-  // Toggle Goal status
   const toggleGoal = (goalId) => {
     setWeeklyGoals((prev) =>
       prev.map((g) => (g.id === goalId ? { ...g, done: !g.done } : g))
@@ -395,20 +462,6 @@ export default function DashboardPage() {
     } catch (error) {
       showNotification(error.message, "error");
     } finally {
-      setGithubBusy(false);
-    }
-  };
-
-  // Connect via GitHub OAuth
-  const handleOAuthConnect = async () => {
-    try {
-      setGithubBusy(true);
-      const res = await getGithubOAuthUrl();
-      if (res?.url) {
-        window.location.href = res.url;
-      }
-    } catch (error) {
-      showNotification(error.message, "error");
       setGithubBusy(false);
     }
   };
@@ -495,13 +548,8 @@ export default function DashboardPage() {
   };
 
   const handleRoast = async () => {
-    if (!github) {
-      showNotification("Connect your GitHub account first.", "error");
-      return;
-    }
-
-    if (!resume) {
-      showNotification("Upload your resume first before generating a roast.", "error");
+    if (!github && !resume) {
+      showNotification("Connect your GitHub account or upload your resume first to generate a roast.", "error");
       return;
     }
 
@@ -516,6 +564,7 @@ export default function DashboardPage() {
       }));
 
       showNotification("Aapka Hinglish AI Roast ready hai! 🔥", "success");
+      document.getElementById("roast-section")?.scrollIntoView({ behavior: "smooth" });
     } catch (error) {
       showNotification(error.message, "error");
     } finally {
@@ -548,6 +597,7 @@ export default function DashboardPage() {
   }
 
   const bothConnected = Boolean(github && resume);
+  const canRoast = Boolean(github || resume);
   const repoCount = stats.repositories || 0;
   const privateCount = stats.private_repositories || 0;
   const completedGoals = weeklyGoals.filter((g) => g.done).length;
@@ -564,7 +614,7 @@ export default function DashboardPage() {
     <div className={`gb-dashboard theme-${currentTheme}`} data-theme={currentTheme}>
       {/* ================= LEFT SIDEBAR ================= */}
       <aside className="gb-sidebar">
-        <div className="gb-logo">
+        <div className="gb-logo" onClick={() => navigate("/")}>
           <span className="bolt">⚡</span>
           <span>GitBridge</span>
         </div>
@@ -654,6 +704,13 @@ export default function DashboardPage() {
         >
           ⚙ <span>Settings & Themes</span>
         </button>
+
+        {/* SIDEBAR BOTTOM HELP CENTER BUTTON */}
+        <div className="sidebar-bottom-help">
+          <button className="sidebar-help-btn" onClick={() => setHelpModalOpen(true)}>
+            <span>💬</span> <span>Help Center & FAQs</span>
+          </button>
+        </div>
       </aside>
 
       {/* ================= MAIN CONTENT ================= */}
@@ -666,12 +723,12 @@ export default function DashboardPage() {
               {activeTab === "dashboard" && "Developer Dashboard & ML Benchmark"}
               {activeTab === "github" && "GitHub Analysis & Private Repos"}
               {activeTab === "resume" && "ATS Resume Analysis & Review"}
-              {activeTab === "opportunities" && "Live Opportunities & Internships"}
+              {activeTab === "opportunities" && "Live Opportunities & Startup Sprints"}
               {activeTab === "skill_gap" && "Skill Gap Analysis (Real Repos Evaluated)"}
               {activeTab === "roadmap" && `Interactive Career Roadmap: ${currentRoadmapData.title}`}
               {activeTab === "progress" && "XP Level & Milestone Progress"}
               {activeTab === "bookmarks" && "Saved Bookmarks & Opportunities"}
-              {activeTab === "settings" && "Platform Settings & Theme Customizer"}
+              {activeTab === "settings" && "Platform Settings & Profile"}
             </span>
             <small className="sub-title">GitBridge • AI Career Engineering</small>
           </div>
@@ -691,6 +748,15 @@ export default function DashboardPage() {
                 <option value="light">☀️ Modern Light</option>
               </select>
             </div>
+
+            {/* HELP BUTTON IN HEADER */}
+            <button
+              className="round-button"
+              title="Help Center"
+              onClick={() => setHelpModalOpen(true)}
+            >
+              💬
+            </button>
 
             {/* NOTIFICATION BELL */}
             <div className="top-menu-wrap">
@@ -754,8 +820,9 @@ export default function DashboardPage() {
                       <small>{data?.email}</small>
                     </div>
                   </div>
-                  <button onClick={() => { setActiveTab("settings"); setProfileOpen(false); }}>⚙ Settings & Themes</button>
+                  <button onClick={() => { setActiveTab("settings"); setProfileOpen(false); }}>⚙ Settings & Profile</button>
                   <button onClick={() => { setActiveTab("bookmarks"); setProfileOpen(false); }}>♡ Bookmarks ({bookmarks.length})</button>
+                  <button onClick={() => { setHelpModalOpen(true); setProfileOpen(false); }}>💬 Help Center</button>
                   <button className="logout-button" onClick={logout}>
                     ⇥ Logout
                   </button>
@@ -782,7 +849,7 @@ export default function DashboardPage() {
               {/* WELCOME BANNER */}
               <section className="hero-card">
                 <div className="hero-info">
-                  <span className="eyebrow">REAL REPOSITORIES & METRICS</span>
+                  <span className="eyebrow">CAREER INTELLIGENCE PLATFORM</span>
                   <h1>
                     Welcome back,<br />
                     <em>{displayName}!</em> 👋
@@ -814,8 +881,8 @@ export default function DashboardPage() {
                   ▤ {resume ? "Re-analyze Resume" : "Upload Resume (PDF/DOCX)"}
                 </button>
                 <button
-                  className={`quick-btn ${bothConnected ? "roast-pulse" : ""}`}
-                  disabled={!bothConnected || roastBusy}
+                  className={`quick-btn ${canRoast ? "roast-pulse" : ""}`}
+                  disabled={!canRoast || roastBusy}
                   onClick={handleRoast}
                 >
                   🔥 Generate Hinglish Roast
@@ -874,15 +941,15 @@ export default function DashboardPage() {
                     <span className="eyebrow">SPECIAL ENTERTAINMENT</span>
                     <h2>🔥 Desi AI Developer Roast (Hinglish)</h2>
                     <p>
-                      {bothConnected
+                      {canRoast
                         ? "Aapke GitHub commits, private repos, aur resume skills par based kadak roast!"
-                        : "Roast unlock karne ke liye GitHub connect karo aur Resume upload karo."}
+                        : "Roast unlock karne ke liye GitHub connect karo ya Resume upload karo."}
                     </p>
                   </div>
 
                   <button
-                    className={`primary-btn ${bothConnected ? "roast-active-btn" : ""}`}
-                    disabled={!bothConnected || roastBusy}
+                    className={`primary-btn ${canRoast ? "roast-active-btn" : ""}`}
+                    disabled={!canRoast || roastBusy}
                     onClick={handleRoast}
                   >
                     {roastBusy
@@ -893,14 +960,12 @@ export default function DashboardPage() {
                   </button>
                 </div>
 
-                {!bothConnected ? (
+                {!canRoast ? (
                   <div className="roast-locked">
                     <div className="lock-icon">🔒</div>
                     <div>
                       <strong>Hinglish AI Roast is Locked</strong>
-                      <p>
-                        GitHub profile {!github && "(Pending ❌)"} aur Resume {!resume && "(Pending ❌)"} dono complete kijiye roast unlock karne ke liye.
-                      </p>
+                      <p>GitHub connect karein ya resume upload karein roast generate karne ke liye.</p>
                     </div>
                   </div>
                 ) : roast ? (
@@ -915,7 +980,7 @@ export default function DashboardPage() {
                   </div>
                 ) : (
                   <div className="roast-waiting">
-                    Aapka GitHub aur Resume ready hai! Upar <strong>"Roast Me (Hinglish) 🔥"</strong> button click karke roast generate karein.
+                    Ready! Upar <strong>"Roast Me (Hinglish) 🔥"</strong> button click karke instant roast generate karein.
                   </div>
                 )}
               </section>
@@ -1575,7 +1640,7 @@ export default function DashboardPage() {
             <div className="tab-container">
               <div className="opportunities-header">
                 <div>
-                  <h2>Live Opportunities & Internships 🎯</h2>
+                  <h2>Live Opportunities & Startup Sprints 🎯</h2>
                   <p>
                     Ranked by real match % based on your {repoCount} GitHub repositories ({mlInsights.domain_name || "Codebase"})
                     {resume ? ` and uploaded ATS resume (${resume.ats_score}% score)` : " (Upload resume for higher ATS boost)"}.
@@ -1638,8 +1703,11 @@ export default function DashboardPage() {
                             <div className="opp-company-badge">
                               <span className="opp-logo">{opp.logo}</span>
                               <div>
-                                <h3>{opp.title}</h3>
-                                <span className="opp-company-name">{opp.company} • 📍 {opp.location}</span>
+                                <div className="opp-company-line">
+                                  <strong>{opp.company}</strong>
+                                  {opp.stage && <span className="stage-tag">{opp.stage}</span>}
+                                </div>
+                                <span className="opp-company-name">📍 {opp.location}</span>
                               </div>
                             </div>
 
@@ -1648,6 +1716,14 @@ export default function DashboardPage() {
                               <span className="match-label">Match</span>
                             </div>
                           </div>
+
+                          <h4 className="opp-card-role-title">{opp.title}</h4>
+
+                          {opp.hiring_timeline && (
+                            <div className="opp-timeline-badge">
+                              <span>📅 {opp.hiring_timeline}</span>
+                            </div>
+                          )}
 
                           <p className="opp-desc">{opp.description}</p>
 
@@ -1697,7 +1773,7 @@ export default function DashboardPage() {
           )}
 
           {/* ============================================================== */}
-          {/* TAB 6: SKILL GAP ANALYZER (EVALUATED FROM REAL REPOSITORIES) */}
+          {/* TAB 6: SKILL GAP ANALYZER */}
           {/* ============================================================== */}
           {activeTab === "skill_gap" && (
             <div className="tab-container">
@@ -1996,7 +2072,7 @@ export default function DashboardPage() {
           )}
 
           {/* ============================================================== */}
-          {/* TAB 10: SETTINGS & THEME CUSTOMIZER */}
+          {/* TAB 10: SETTINGS & PROFILE (SAVES TO MONGODB) */}
           {/* ============================================================== */}
           {activeTab === "settings" && (
             <div className="tab-container">
@@ -2005,8 +2081,8 @@ export default function DashboardPage() {
                   <div className="panel-header-left">
                     <div className="panel-icon purple">⚙</div>
                     <div>
-                      <h2>Platform Settings & Themes</h2>
-                      <span className="panel-subtitle">Customize themes, dark mode, light mode, and account preferences</span>
+                      <h2>Platform Settings & Profile</h2>
+                      <span className="panel-subtitle">Customize themes, edit career goals, and access support</span>
                     </div>
                   </div>
                 </div>
@@ -2053,30 +2129,100 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                {/* ACCOUNT PROFILE SETTINGS */}
+                {/* EDIT PROFILE & ONBOARDING FORM (SAVES TO MONGODB) */}
                 <div className="settings-section">
-                  <h3 className="settings-section-title">👤 Account Profile</h3>
-                  <div className="profile-info-table">
-                    <div className="p-row">
-                      <span className="p-label">Display Name:</span>
-                      <strong>{displayName}</strong>
+                  <h3 className="settings-section-title">👤 Edit Profile & Career Preferences (MongoDB Synced)</h3>
+                  <p className="panel-description">
+                    Update your personal information, target role, and links. Changes are saved directly to the database.
+                  </p>
+
+                  <form onSubmit={handleSaveProfile} className="profile-edit-form">
+                    <div className="profile-form-grid">
+                      <div className="p-input-group">
+                        <label>Full Name</label>
+                        <input
+                          type="text"
+                          placeholder="Your Name"
+                          value={profileName}
+                          onChange={(e) => setProfileName(e.target.value)}
+                        />
+                      </div>
+
+                      <div className="p-input-group">
+                        <label>Target Job Role</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. DevOps Engineer / Cloud Platform"
+                          value={profileTargetRole}
+                          onChange={(e) => setProfileTargetRole(e.target.value)}
+                        />
+                      </div>
+
+                      <div className="p-input-group">
+                        <label>Preferred Work Location</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Bengaluru / Remote / Hybrid"
+                          value={profileLocation}
+                          onChange={(e) => setProfileLocation(e.target.value)}
+                        />
+                      </div>
+
+                      <div className="p-input-group">
+                        <label>Phone Number</label>
+                        <input
+                          type="text"
+                          placeholder="+91 9876543210"
+                          value={profilePhone}
+                          onChange={(e) => setProfilePhone(e.target.value)}
+                        />
+                      </div>
+
+                      <div className="p-input-group full">
+                        <label>LinkedIn Profile URL</label>
+                        <input
+                          type="url"
+                          placeholder="https://linkedin.com/in/yourprofile"
+                          value={profileLinkedIn}
+                          onChange={(e) => setProfileLinkedIn(e.target.value)}
+                        />
+                      </div>
+
+                      <div className="p-input-group full">
+                        <label>Short Bio / Engineering Focus</label>
+                        <textarea
+                          placeholder="Brief summary of your technical background and what you are looking for..."
+                          value={profileBio}
+                          onChange={(e) => setProfileBio(e.target.value)}
+                          rows={3}
+                        />
+                      </div>
                     </div>
-                    <div className="p-row">
-                      <span className="p-label">Registered Email:</span>
-                      <strong>{data?.email}</strong>
-                    </div>
-                    <div className="p-row">
-                      <span className="p-label">Connected GitHub:</span>
-                      <strong>{github ? `@${github.username}` : "Not connected"}</strong>
-                    </div>
-                    <div className="p-row">
-                      <span className="p-label">Private Repo Access:</span>
-                      <strong>{github?.has_private_access ? "Enabled 🔒" : "Disabled (Public only)"}</strong>
-                    </div>
-                    <div className="p-row">
-                      <span className="p-label">Analyzed Specialization:</span>
-                      <strong>{mlInsights.domain_name || "Software Engineering"} ({mlInsights.primary_signal || "Code"})</strong>
-                    </div>
+
+                    <button type="submit" className="primary-btn save-profile-btn" disabled={profileSaving}>
+                      {profileSaving ? "Saving to Database..." : "Save Profile Changes →"}
+                    </button>
+                  </form>
+                </div>
+
+                {/* HELP CENTER & SUPPORT SECTION */}
+                <div className="settings-section">
+                  <h3 className="settings-section-title">💬 Help Center & Support</h3>
+                  <p className="panel-description">
+                    Need assistance with GitHub private tokens, ATS resume review, or opportunity applications?
+                  </p>
+                  <div className="help-section-actions">
+                    <button className="primary-btn" onClick={() => setHelpModalOpen(true)}>
+                      💬 Open Help Center & Submit Inquiry
+                    </button>
+                    <a
+                      href="https://github.com/amrut029/GitBridge-Careers/issues"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="secondary-btn"
+                    >
+                      Report an Issue on GitHub ↗
+                    </a>
                   </div>
                 </div>
 
@@ -2102,6 +2248,54 @@ export default function DashboardPage() {
           )}
         </section>
       </main>
+
+      {/* ================= HELP CENTER MODAL ================= */}
+      {helpModalOpen && (
+        <div className="modal-backdrop" onClick={() => setHelpModalOpen(false)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-head">
+              <div>
+                <h3>💬 GitBridge Help Center</h3>
+                <p>Submit a support ticket or find answers to common questions.</p>
+              </div>
+              <button className="modal-close-btn" onClick={() => setHelpModalOpen(false)}>
+                ✕
+              </button>
+            </div>
+
+            <div className="help-modal-faqs">
+              <strong>Quick FAQs:</strong>
+              <div className="faq-item">
+                <b>Q: How do I view private repositories?</b>
+                <p>Go to GitHub Analysis → Click &apos;Add Token&apos; → Paste a classic token with <code>repo</code> scope.</p>
+              </div>
+              <div className="faq-item">
+                <b>Q: How is the ML Score calculated?</b>
+                <p>Our Scikit-Learn regression engine analyzes your repository languages, code velocity, stars, and ATS resume match.</p>
+              </div>
+            </div>
+
+            <form onSubmit={handleHelpSubmit} className="help-modal-form">
+              <label>Your Inquiry or Question:</label>
+              <textarea
+                placeholder="Describe your issue, feature request, or feedback..."
+                value={helpQueryText}
+                onChange={(e) => setHelpQueryText(e.target.value)}
+                rows={4}
+                required
+              />
+              <div className="modal-actions">
+                <button type="button" className="secondary-btn" onClick={() => setHelpModalOpen(false)}>
+                  Cancel
+                </button>
+                <button type="submit" className="primary-btn" disabled={helpSubmitting}>
+                  {helpSubmitting ? "Submitting..." : "Submit Support Ticket →"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
