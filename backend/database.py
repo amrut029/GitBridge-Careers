@@ -106,6 +106,14 @@ def get_users_collection():
     return users_collection
 
 
+def get_support_tickets_collection():
+    db = get_database()
+    if db is None:
+        return None
+    return db["support_tickets"]
+
+
+
 # =========================================================
 # CLOSE DATABASE
 # =========================================================

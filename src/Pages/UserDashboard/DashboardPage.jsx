@@ -15,6 +15,8 @@ import {
   submitHelpQuery,
   updateProfile,
   uploadResume,
+  getAdminInquiries,
+  updateInquiryStatus,
 } from "../../Services/dashboardApi";
 
 const formatNumber = (value) =>
@@ -34,16 +36,16 @@ const THEMES = [
   {
     id: "oled",
     name: "Midnight OLED",
-    desc: "True pure pitch-black with vibrant neon violet",
-    badge: "🌌 Deep Dark",
-    colors: ["#000000", "#0c0c0e", "#a855f7"]
+    desc: "Ultra-pure deep pitch black (#000) for OLED panels",
+    badge: "🌌 Pitch Black",
+    colors: ["#000000", "#0a0a0d", "#a855f7"]
   },
   {
     id: "cyberpunk",
     name: "Cyberpunk Neon",
-    desc: "Dark synthwave with electric cyan & hot pink highlights",
-    badge: "🚀 Cyberpunk",
-    colors: ["#0a0e17", "#111927", "#00f0ff"]
+    desc: "High-contrast electric cyan and neon magenta palette",
+    badge: "🚀 Cyber Neon",
+    colors: ["#070a13", "#0d1322", "#00f0ff"]
   },
   {
     id: "light",
@@ -55,8 +57,20 @@ const THEMES = [
 ];
 
 const DEFAULT_ROADMAPS = {
+  software: {
+    title: "Software & Full-Stack Development (Web, Apps & Systems)",
+    desc: "Covers frontends, high-throughput backend APIs, database architecture, and mobile/desktop application engineering.",
+    steps: [
+      { id: "sw1", title: "Core CS & Algorithms (Data Structures, Time Complexity, OOP)", status: "completed", desc: "Arrays, LinkedLists, Trees, Graphs, Sorting algorithms, Object-Oriented Design patterns, and clean code." },
+      { id: "sw2", title: "Modern Web Frontend (React 19, TypeScript, Next.js)", status: "completed", desc: "State management, client/server components, responsive CSS Grid/Flexbox, and accessibility standards." },
+      { id: "sw3", title: "Backend API Frameworks (Node.js/Express, Python/FastAPI, Java/Spring)", status: "in_progress", desc: "RESTful architecture, asynchronous request pipelines, middleware authentication, and OpenAPI specs." },
+      { id: "sw4", title: "Database Systems & Caching (PostgreSQL, MongoDB Atlas, Redis)", status: "in_progress", desc: "Relational indexing, NoSQL document modeling, transaction ACID properties, and Redis caching layers." },
+      { id: "sw5", title: "Application Deployment, Containerization & CI/CD", status: "pending", desc: "Docker multi-stage builds, automated GitHub Actions testing, serverless functions, and cloud hosting." },
+      { id: "sw6", title: "System Design & Distributed Microservices", status: "pending", desc: "Horizontal scalability, rate limiting, message queues (RabbitMQ/Kafka), and load balancers." }
+    ]
+  },
   devops: {
-    title: "DevOps & Cloud Infrastructure Architect",
+    title: "Cloud, DevOps & Site Reliability Engineering (SRE)",
     desc: "Production-grade infrastructure as code, Kubernetes orchestration, CI/CD pipelines, and cloud observability.",
     steps: [
       { id: "do1", title: "Linux Systems, Shell & Networking Foundations", status: "completed", desc: "Bash scripting, process management, SSH keys, IPTables, DNS, and systemd services." },
@@ -67,49 +81,26 @@ const DEFAULT_ROADMAPS = {
       { id: "do6", title: "Observability, Monitoring & GitOps (Prometheus & ArgoCD)", status: "pending", desc: "Prometheus metrics collection, Grafana visualization dashboards, alert managers, and ArgoCD GitOps sync." }
     ]
   },
-  fullstack: {
-    title: "Full-Stack Web Architect",
-    desc: "End-to-end mastery from reactive frontends to high-throughput distributed backends.",
+  aiml: {
+    title: "AI, Machine Learning & Data Science Engineering",
+    desc: "Data engineering pipelines, deep learning models, LLM fine-tuning, RAG architectures, and scalable MLOps.",
     steps: [
-      { id: "fs1", title: "Modern JavaScript / TypeScript & ESNext", status: "completed", desc: "Closures, async/await, DOM APIs, TypeScript generics and strict typing." },
-      { id: "fs2", title: "React 19 & Component Architecture", status: "completed", desc: "Hooks, server actions, state management (Zustand/Redux), performance memoization." },
-      { id: "fs3", title: "Scalable REST & FastAPI / Express APIs", status: "in_progress", desc: "FastAPI / Node.js, JWT authentication, rate limiting, and OpenAPI contracts." },
-      { id: "fs4", title: "Relational & NoSQL Database Optimization", status: "in_progress", desc: "Indexing in PostgreSQL & MongoDB Atlas, aggregation pipelines, schema migrations." },
-      { id: "fs5", title: "Docker Containerization & Deployment", status: "pending", desc: "Multi-stage Dockerfiles, GitHub Actions workflows, container registry deployments." },
-      { id: "fs6", title: "System Design & Distributed Caching", status: "pending", desc: "Redis caching, message queues (RabbitMQ/Kafka), microservices architecture." }
+      { id: "ai1", title: "Mathematics, Statistics & Data Wrangling (NumPy, Pandas)", status: "completed", desc: "Linear algebra, matrix operations, statistical inference, feature engineering, and data cleaning." },
+      { id: "ai2", title: "Classical Machine Learning & Scikit-Learn Models", status: "completed", desc: "Supervised & unsupervised learning, Random Forest, XGBoost, cross-validation, and metrics evaluation." },
+      { id: "ai3", title: "Deep Learning & Neural Networks (PyTorch / TensorFlow)", status: "in_progress", desc: "CNNs for Computer Vision, RNNs/Transformers for NLP, backpropagation, and GPU training optimization." },
+      { id: "ai4", title: "Generative AI, LLMs & Vector Retrieval (RAG, ChromaDB)", status: "in_progress", desc: "Vector embeddings, LangChain, semantic search, prompt engineering, and agent tool execution." },
+      { id: "ai5", title: "MLOps, Model Deployment & FastAPI Inference", status: "pending", desc: "Containerizing models with Docker, low-latency ONNX runtime, Triton inference server, and model monitoring." }
     ]
   },
-  frontend: {
-    title: "Frontend Engineering Specialist",
-    desc: "Deep mastery of browser performance, UI micro-interactions, and enterprise design systems.",
+  embedded: {
+    title: "Embedded Systems, IoT & Core Systems Engineering",
+    desc: "Low-level system architecture, microcontrollers, real-time operating systems (RTOS), and hardware-software interfacing.",
     steps: [
-      { id: "fe1", title: "Advanced CSS, Tailwind & Responsive Layouts", status: "completed", desc: "CSS Grid, Flexbox, subgrid, container queries, modern animation curves." },
-      { id: "fe2", title: "React Ecosystem & Next.js SSR / SSG", status: "in_progress", desc: "Server-side rendering, streaming SSR, App router, Next.js optimization." },
-      { id: "fe3", title: "Web Performance & Core Web Vitals", status: "in_progress", desc: "LCP, FID/INP, CLS debugging, bundle size analysis, image compression pipelines." },
-      { id: "fe4", title: "State Management & Real-time WebSockets", status: "pending", desc: "Zustand, TanStack Query (React Query), WebSocket duplex streaming." },
-      { id: "fe5", title: "Testing (Vitest, Jest & Cypress E2E)", status: "pending", desc: "Unit testing components, mocking API handlers, automated visual regression." }
-    ]
-  },
-  backend: {
-    title: "Backend & Systems Architect",
-    desc: "High-throughput APIs, database scaling, microservices, and secure cloud infrastructure.",
-    steps: [
-      { id: "be1", title: "Python & FastAPI High-Performance Frameworks", status: "completed", desc: "Pydantic validation, async def routes, dependency injection, and ASGI tuning." },
-      { id: "be2", title: "Database Modeling & Query Tuning", status: "in_progress", desc: "PostgreSQL joins, composite indexes, MongoDB document sharding and transactions." },
-      { id: "be3", title: "Cloud Architecture (AWS / GCP)", status: "pending", desc: "S3 storage, ECS / EKS, Lambda serverless, CloudWatch observability." },
-      { id: "be4", title: "Security & OAuth2 / OpenID Connect", status: "in_progress", desc: "JWT signed tokens, CSRF protection, RBAC permissions, and secret management." },
-      { id: "be5", title: "Production Orchestration & Microservices", status: "pending", desc: "gRPC communication, event-driven architectures, distributed tracing." }
-    ]
-  },
-  ai: {
-    title: "AI / ML & Agentic Systems Engineer",
-    desc: "Machine learning engineering, LLM fine-tuning, RAG pipelines, and autonomous AI agents.",
-    steps: [
-      { id: "ai1", title: "Data Wrangling with NumPy & Pandas", status: "completed", desc: "Matrix calculations, vectorization, feature scaling, and data normalization." },
-      { id: "ai2", title: "Scikit-Learn Machine Learning Models", status: "completed", desc: "Random Forest, Gradient Boosting, regression, classification, cross-validation." },
-      { id: "ai3", title: "Vector Databases & Semantic Search", status: "in_progress", desc: "Embeddings, Pinecone, ChromaDB, Cosine similarity search for intelligent retrieval." },
-      { id: "ai4", title: "LLM Agent Tool Calling & Orchestration", status: "in_progress", desc: "Function calling, multi-agent communication protocols, task reflection loops." },
-      { id: "ai5", title: "Model Deployment & FastAPI Inference Microservices", status: "pending", desc: "ONNX Runtime, GPU acceleration, Dockerized inference containers." }
+      { id: "em1", title: "C & C++ Systems Programming & Memory Management", status: "completed", desc: "Pointers, dynamic memory allocation, bit manipulation, struct packing, and memory layout." },
+      { id: "em2", title: "Microcontroller Architectures & Peripheral Protocols", status: "completed", desc: "ARM Cortex-M, ESP32, GPIO, UART, SPI, I2C, Timers, Interrupt Service Routines (ISR), and DMA." },
+      { id: "em3", title: "Real-Time Operating Systems (FreeRTOS / Zephyr)", status: "in_progress", desc: "Task scheduling, mutexes, semaphores, queue communication, priority inversion, and context switching." },
+      { id: "em4", title: "Embedded Linux & Device Driver Development", status: "in_progress", desc: "Kernel modules, character drivers, device tree overlays, U-Boot bootloader, and cross-compilation." },
+      { id: "em5", title: "IoT Protocols & Wireless Networking (MQTT, BLE, Zigbee)", status: "pending", desc: "TCP/IP socket programming, lightweight telemetry protocols (MQTT/CoAP), and TLS security on edge devices." }
     ]
   }
 };
@@ -165,6 +156,15 @@ export default function DashboardPage() {
     return localStorage.getItem("gb_theme") || "classic";
   });
 
+  // City Filter for Opportunities
+  const [cityFilter, setCityFilter] = useState("all");
+
+  // Admin Portal State
+  const [adminTickets, setAdminTickets] = useState([]);
+  const [adminStats, setAdminStats] = useState(null);
+  const [adminLoading, setAdminLoading] = useState(false);
+  const [adminFilter, setAdminFilter] = useState("all"); // 'all', 'pending', 'resolved'
+
   // Bookmarks state (Persisted in localStorage)
   const [bookmarks, setBookmarks] = useState(() => {
     try {
@@ -174,7 +174,7 @@ export default function DashboardPage() {
     }
   });
 
-  // Selected Roadmap State
+  // Selected Roadmap State (defaults to devops or software)
   const [selectedRoadmap, setSelectedRoadmap] = useState("devops");
 
   // User Milestones
@@ -243,7 +243,40 @@ export default function DashboardPage() {
 
     loadDashboard();
     loadOpportunitiesData();
+    loadAdminData();
   }, [navigate]);
+
+  const loadAdminData = async () => {
+    setAdminLoading(true);
+    try {
+      const res = await getAdminInquiries();
+      setAdminTickets(res.tickets || []);
+      setAdminStats(res.stats || null);
+    } catch (err) {
+      console.warn("Admin inquiries not accessible:", err.message);
+    } finally {
+      setAdminLoading(false);
+    }
+  };
+
+  const handleUpdateTicketStatus = async (ticketId, newStatus) => {
+    try {
+      await updateInquiryStatus(ticketId, newStatus);
+      showNotification(`Ticket updated to ${newStatus}.`, "success");
+      setAdminTickets((prev) =>
+        prev.map((t) => (t.ticket_id === ticketId ? { ...t, status: newStatus } : t))
+      );
+      if (adminStats) {
+        setAdminStats((prev) => ({
+          ...prev,
+          pending_tickets: newStatus === "resolved" ? Math.max(0, prev.pending_tickets - 1) : prev.pending_tickets + 1,
+          resolved_tickets: newStatus === "resolved" ? prev.resolved_tickets + 1 : Math.max(0, prev.resolved_tickets - 1),
+        }));
+      }
+    } catch (err) {
+      showNotification("Failed to update ticket: " + err.message, "error");
+    }
+  };
 
   const showNotification = (msg, type = "info") => {
     setNotice(msg);
@@ -252,6 +285,7 @@ export default function DashboardPage() {
       setNotice("");
     }, 6000);
   };
+
 
   const loadDashboard = async () => {
     try {
@@ -360,25 +394,55 @@ export default function DashboardPage() {
     return repositories;
   }, [repositories, repoVisibilityFilter]);
 
-  // Filtered opportunities
+  // Filtered opportunities with City & Fresher Support
   const filteredOpportunities = useMemo(() => {
     return opportunities.filter((opp) => {
+      // Type/Level filter
+      const oppType = (opp.type || "").toLowerCase();
+      const oppLevel = (opp.level || "").toLowerCase();
+      const oppExp = (opp.experience || "").toLowerCase();
+
       const matchType =
         oppFilter === "all" ||
-        (oppFilter === "internship" && opp.type.toLowerCase().includes("intern")) ||
-        (oppFilter === "fulltime" && opp.type.toLowerCase().includes("full")) ||
-        (oppFilter === "remote" && opp.location.toLowerCase().includes("remote"));
+        (oppFilter === "fresher" && (oppLevel === "fresher" || oppExp.includes("fresh") || oppExp.includes("0-1"))) ||
+        (oppFilter === "internship" && (oppType.includes("intern") || oppLevel === "internship")) ||
+        (oppFilter === "fulltime" && oppType.includes("full")) ||
+        (oppFilter === "remote" && (opp.location?.toLowerCase().includes("remote") || opp.city?.toLowerCase() === "remote"));
 
+      // City filter
+      const oppCity = (opp.city || "").toLowerCase();
+      const oppLocation = (opp.location || "").toLowerCase();
+      const selectedCityLower = cityFilter.toLowerCase();
+
+      const matchCity =
+        cityFilter === "all" ||
+        oppCity.includes(selectedCityLower) ||
+        oppLocation.includes(selectedCityLower);
+
+      // Search Query
       const matchQuery =
         !oppSearch ||
         opp.title.toLowerCase().includes(oppSearch.toLowerCase()) ||
         opp.company.toLowerCase().includes(oppSearch.toLowerCase()) ||
         (opp.stage && opp.stage.toLowerCase().includes(oppSearch.toLowerCase())) ||
+        (opp.city && opp.city.toLowerCase().includes(oppSearch.toLowerCase())) ||
         opp.required_skills.some((s) => s.toLowerCase().includes(oppSearch.toLowerCase()));
 
-      return matchType && matchQuery;
+      return matchType && matchCity && matchQuery;
     });
-  }, [opportunities, oppFilter, oppSearch]);
+  }, [opportunities, oppFilter, cityFilter, oppSearch]);
+
+  // Profile Strength Calculator (0 - 100%)
+  const profileStrength = useMemo(() => {
+    let score = 20; // Base sign in
+    if (github?.username) score += 25;
+    if (resume?.ats_score) score += 25;
+    if (profileName || data?.name) score += 10;
+    if (profileTargetRole || data?.target_role) score += 10;
+    if (profileLinkedIn || data?.linkedin_url) score += 10;
+    return Math.min(100, score);
+  }, [github, resume, profileName, profileTargetRole, profileLinkedIn, data]);
+
 
   // Toggle Bookmark
   const toggleBookmark = (item, type = "opportunity") => {
@@ -705,9 +769,17 @@ export default function DashboardPage() {
           ⚙ <span>Settings & Themes</span>
         </button>
 
+        <button
+          className={`side-item ${activeTab === "admin" ? "active" : ""}`}
+          onClick={() => { setActiveTab("admin"); loadAdminData(); }}
+        >
+          🛡️ <span>Admin Portal</span>
+          {adminStats?.pending_tickets > 0 && <span className="side-badge fire-badge">{adminStats.pending_tickets}</span>}
+        </button>
+
         {/* SIDEBAR BOTTOM HELP CENTER BUTTON */}
         <div className="sidebar-bottom-help">
-          <button className="sidebar-help-btn" onClick={() => setHelpModalOpen(true)}>
+          <button className="primary-btn" onClick={() => setHelpModalOpen(true)}>
             <span>💬</span> <span>Help Center & FAQs</span>
           </button>
         </div>
@@ -729,26 +801,12 @@ export default function DashboardPage() {
               {activeTab === "progress" && "XP Level & Milestone Progress"}
               {activeTab === "bookmarks" && "Saved Bookmarks & Opportunities"}
               {activeTab === "settings" && "Platform Settings & Profile"}
+              {activeTab === "admin" && "Admin Portal • User Inquiries & Analytics"}
             </span>
             <small className="sub-title">GitBridge • AI Career Engineering</small>
           </div>
 
           <div className="top-actions">
-            {/* Quick Theme Switcher Pill in Header */}
-            <div className="theme-quick-pill">
-              <span className="theme-pill-label">Theme:</span>
-              <select
-                value={currentTheme}
-                onChange={(e) => setCurrentTheme(e.target.value)}
-                className="theme-select-dropdown"
-              >
-                <option value="classic">⚡ Classic Dark</option>
-                <option value="oled">🌌 Midnight OLED</option>
-                <option value="cyberpunk">🚀 Cyberpunk</option>
-                <option value="light">☀️ Modern Light</option>
-              </select>
-            </div>
-
             {/* HELP BUTTON IN HEADER */}
             <button
               className="round-button"
@@ -768,6 +826,7 @@ export default function DashboardPage() {
                 🔔
                 {unreadCount > 0 && <span className="badge-dot">{unreadCount}</span>}
               </button>
+
 
               {notificationOpen && (
                 <div className="dropdown notifications-dropdown">
@@ -1650,7 +1709,7 @@ export default function DashboardPage() {
                 <div className="opp-controls">
                   <input
                     type="text"
-                    placeholder="Search by role, company, or skill..."
+                    placeholder="Search by role, company, city, or skill..."
                     value={oppSearch}
                     onChange={(e) => setOppSearch(e.target.value)}
                     className="opp-search-input"
@@ -1664,23 +1723,43 @@ export default function DashboardPage() {
                       All Roles
                     </button>
                     <button
+                      className={`filter-pill ${oppFilter === "fresher" ? "active" : ""}`}
+                      onClick={() => setOppFilter("fresher")}
+                    >
+                      🎓 Freshers (0-1 Yrs)
+                    </button>
+                    <button
                       className={`filter-pill ${oppFilter === "internship" ? "active" : ""}`}
                       onClick={() => setOppFilter("internship")}
                     >
-                      Internships
+                      💼 Internships
                     </button>
                     <button
                       className={`filter-pill ${oppFilter === "fulltime" ? "active" : ""}`}
                       onClick={() => setOppFilter("fulltime")}
                     >
-                      Full-Time
+                      ⚡ Full-Time
                     </button>
                     <button
                       className={`filter-pill ${oppFilter === "remote" ? "active" : ""}`}
                       onClick={() => setOppFilter("remote")}
                     >
-                      Remote
+                      🌐 Remote
                     </button>
+                  </div>
+
+                  {/* CITY / LOCATION FILTER BAR */}
+                  <div className="opp-city-filter-row">
+                    <span className="city-label">📍 City:</span>
+                    {["all", "Bengaluru", "Pune", "Hyderabad", "Mumbai", "Delhi-NCR", "Chennai", "Remote"].map((city) => (
+                      <button
+                        key={city}
+                        className={`city-pill ${cityFilter === city ? "active" : ""}`}
+                        onClick={() => setCityFilter(city)}
+                      >
+                        {city === "all" ? "All Locations" : city}
+                      </button>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -1882,34 +1961,28 @@ export default function DashboardPage() {
 
                 <div className="roadmap-selector">
                   <button
+                    className={`selector-btn ${selectedRoadmap === "software" ? "active" : ""}`}
+                    onClick={() => setSelectedRoadmap("software")}
+                  >
+                    💻 Software & Full-Stack
+                  </button>
+                  <button
                     className={`selector-btn ${selectedRoadmap === "devops" ? "active" : ""}`}
                     onClick={() => setSelectedRoadmap("devops")}
                   >
-                    DevOps & Cloud ⭐
+                    ☁️ Cloud & DevOps (SRE) ⭐
                   </button>
                   <button
-                    className={`selector-btn ${selectedRoadmap === "fullstack" ? "active" : ""}`}
-                    onClick={() => setSelectedRoadmap("fullstack")}
+                    className={`selector-btn ${selectedRoadmap === "aiml" ? "active" : ""}`}
+                    onClick={() => setSelectedRoadmap("aiml")}
                   >
-                    Full-Stack
+                    🤖 AI, ML & Data Science
                   </button>
                   <button
-                    className={`selector-btn ${selectedRoadmap === "frontend" ? "active" : ""}`}
-                    onClick={() => setSelectedRoadmap("frontend")}
+                    className={`selector-btn ${selectedRoadmap === "embedded" ? "active" : ""}`}
+                    onClick={() => setSelectedRoadmap("embedded")}
                   >
-                    Frontend
-                  </button>
-                  <button
-                    className={`selector-btn ${selectedRoadmap === "backend" ? "active" : ""}`}
-                    onClick={() => setSelectedRoadmap("backend")}
-                  >
-                    Backend
-                  </button>
-                  <button
-                    className={`selector-btn ${selectedRoadmap === "ai" ? "active" : ""}`}
-                    onClick={() => setSelectedRoadmap("ai")}
-                  >
-                    AI & ML
+                    ⚡ Embedded & Core CS
                   </button>
                 </div>
               </div>
@@ -2131,45 +2204,74 @@ export default function DashboardPage() {
 
                 {/* EDIT PROFILE & ONBOARDING FORM (SAVES TO MONGODB) */}
                 <div className="settings-section">
-                  <h3 className="settings-section-title">👤 Edit Profile & Career Preferences (MongoDB Synced)</h3>
+                  <div className="section-title-with-badge">
+                    <h3 className="settings-section-title">👤 Edit Profile & Engineering Identity (MongoDB Synced)</h3>
+                    <span className="profile-strength-badge">
+                      💪 Profile Strength: <strong>{profileStrength}%</strong>
+                    </span>
+                  </div>
                   <p className="panel-description">
-                    Update your personal information, target role, and links. Changes are saved directly to the database.
+                    Update your full name, target engineering specialization, preferred work cities, and professional links. All data is securely synchronized with your account in MongoDB Atlas.
                   </p>
+
+                  {/* Profile Strength Bar */}
+                  <div className="profile-strength-bar-wrap">
+                    <div className="profile-strength-fill" style={{ width: `${profileStrength}%` }}></div>
+                  </div>
+
+                  {/* Profile Summary Card Preview */}
+                  <div className="profile-preview-card">
+                    <div className="p-avatar-box">
+                      <span className="p-avatar-lg">{initials}</span>
+                      <span className="p-online-dot"></span>
+                    </div>
+                    <div className="p-preview-info">
+                      <div className="p-name-row">
+                        <strong>{profileName || displayName}</strong>
+                        <span className="p-role-pill">🎯 {profileTargetRole || mlInsights.domain_name || "Engineering Candidate"}</span>
+                      </div>
+                      <div className="p-meta-badges">
+                        <span>📧 {data?.email}</span>
+                        <span>📍 {profileLocation || "India / Remote"}</span>
+                        {profileLinkedIn && <a href={profileLinkedIn} target="_blank" rel="noreferrer">🔗 LinkedIn ↗</a>}
+                      </div>
+                    </div>
+                  </div>
 
                   <form onSubmit={handleSaveProfile} className="profile-edit-form">
                     <div className="profile-form-grid">
                       <div className="p-input-group">
-                        <label>Full Name</label>
+                        <label>👤 Full Name</label>
                         <input
                           type="text"
-                          placeholder="Your Name"
+                          placeholder="e.g. Amrut Badki"
                           value={profileName}
                           onChange={(e) => setProfileName(e.target.value)}
                         />
                       </div>
 
                       <div className="p-input-group">
-                        <label>Target Job Role</label>
+                        <label>🎯 Target Engineering Role</label>
                         <input
                           type="text"
-                          placeholder="e.g. DevOps Engineer / Cloud Platform"
+                          placeholder="e.g. Full-Stack Engineer / DevOps Cloud SRE"
                           value={profileTargetRole}
                           onChange={(e) => setProfileTargetRole(e.target.value)}
                         />
                       </div>
 
                       <div className="p-input-group">
-                        <label>Preferred Work Location</label>
+                        <label>📍 Preferred Work Cities</label>
                         <input
                           type="text"
-                          placeholder="e.g. Bengaluru / Remote / Hybrid"
+                          placeholder="e.g. Bengaluru, Pune, Hyderabad / Remote"
                           value={profileLocation}
                           onChange={(e) => setProfileLocation(e.target.value)}
                         />
                       </div>
 
                       <div className="p-input-group">
-                        <label>Phone Number</label>
+                        <label>📞 Phone Number</label>
                         <input
                           type="text"
                           placeholder="+91 9876543210"
@@ -2179,7 +2281,7 @@ export default function DashboardPage() {
                       </div>
 
                       <div className="p-input-group full">
-                        <label>LinkedIn Profile URL</label>
+                        <label>🔗 LinkedIn Profile URL</label>
                         <input
                           type="url"
                           placeholder="https://linkedin.com/in/yourprofile"
@@ -2189,9 +2291,9 @@ export default function DashboardPage() {
                       </div>
 
                       <div className="p-input-group full">
-                        <label>Short Bio / Engineering Focus</label>
+                        <label>📝 Technical Bio & Career Goals</label>
                         <textarea
-                          placeholder="Brief summary of your technical background and what you are looking for..."
+                          placeholder="Highlight your core technical skills, university background, and what roles you are actively seeking..."
                           value={profileBio}
                           onChange={(e) => setProfileBio(e.target.value)}
                           rows={3}
@@ -2199,15 +2301,18 @@ export default function DashboardPage() {
                       </div>
                     </div>
 
-                    <button type="submit" className="primary-btn save-profile-btn" disabled={profileSaving}>
-                      {profileSaving ? "Saving to Database..." : "Save Profile Changes →"}
-                    </button>
+                    <div className="profile-form-footer">
+                      <button type="submit" className="primary-btn save-profile-btn" disabled={profileSaving}>
+                        {profileSaving ? "Saving to Database..." : "Save Profile Changes →"}
+                      </button>
+                      <small className="save-hint">⚡ Changes persist in MongoDB Atlas across all sessions</small>
+                    </div>
                   </form>
                 </div>
 
                 {/* HELP CENTER & SUPPORT SECTION */}
                 <div className="settings-section">
-                  <h3 className="settings-section-title">💬 Help Center & Support</h3>
+                  <h3 className="settings-section-title">💬 Help Center & Support Tickets</h3>
                   <p className="panel-description">
                     Need assistance with GitHub private tokens, ATS resume review, or opportunity applications?
                   </p>
@@ -2246,8 +2351,150 @@ export default function DashboardPage() {
               </section>
             </div>
           )}
+
+          {/* ============================================================== */}
+          {/* TAB 11: ADMIN PORTAL (LIVE INQUIRIES & PLATFORM STATS) */}
+          {/* ============================================================== */}
+          {activeTab === "admin" && (
+            <div className="tab-container">
+              <section className="panel">
+                <div className="panel-title-row">
+                  <div className="panel-header-left">
+                    <div className="panel-icon purple">🛡️</div>
+                    <div>
+                      <h2>Admin Portal • User Inquiries & Support Tickets</h2>
+                      <span className="panel-subtitle">Review questions submitted via homepage footer and dashboard help center</span>
+                    </div>
+                  </div>
+                  <button className="secondary-btn" onClick={loadAdminData} disabled={adminLoading}>
+                    {adminLoading ? "Refreshing..." : "↻ Refresh Tickets"}
+                  </button>
+                </div>
+
+                {/* ADMIN METRIC STATS */}
+                <div className="admin-stats-grid">
+                  <div className="admin-stat-card">
+                    <span className="stat-label">Total Registered Users</span>
+                    <strong>{adminStats?.total_users || 0}</strong>
+                    <small>👥 MongoDB Atlas</small>
+                  </div>
+                  <div className="admin-stat-card">
+                    <span className="stat-label">Total Inquiries</span>
+                    <strong>{adminStats?.total_tickets || adminTickets.length}</strong>
+                    <small>💬 All Time</small>
+                  </div>
+                  <div className="admin-stat-card fire">
+                    <span className="stat-label">Pending Inquiries</span>
+                    <strong className="pending-text">{adminStats?.pending_tickets || 0}</strong>
+                    <small>⚡ Action Required</small>
+                  </div>
+                  <div className="admin-stat-card green">
+                    <span className="stat-label">Resolved Tickets</span>
+                    <strong className="resolved-text">{adminStats?.resolved_tickets || 0}</strong>
+                    <small>✓ Handled</small>
+                  </div>
+                </div>
+
+                {/* FILTER CONTROLS */}
+                <div className="admin-filter-bar">
+                  <div className="admin-filter-pills">
+                    <button
+                      className={`filter-pill ${adminFilter === "all" ? "active" : ""}`}
+                      onClick={() => setAdminFilter("all")}
+                    >
+                      All Tickets ({adminTickets.length})
+                    </button>
+                    <button
+                      className={`filter-pill ${adminFilter === "pending" ? "active" : ""}`}
+                      onClick={() => setAdminFilter("pending")}
+                    >
+                      Pending Only ({adminTickets.filter((t) => t.status === "pending").length})
+                    </button>
+                    <button
+                      className={`filter-pill ${adminFilter === "resolved" ? "active" : ""}`}
+                      onClick={() => setAdminFilter("resolved")}
+                    >
+                      Resolved ({adminTickets.filter((t) => t.status === "resolved").length})
+                    </button>
+                  </div>
+                </div>
+
+                {/* TICKETS LIST */}
+                {adminLoading ? (
+                  <div className="dashboard-loading">
+                    <div className="loading-spinner"></div>
+                    <p>Loading inquiries from MongoDB Atlas...</p>
+                  </div>
+                ) : (
+                  <div className="admin-tickets-list">
+                    {adminTickets
+                      .filter((t) => adminFilter === "all" || t.status === adminFilter)
+                      .map((ticket) => {
+                        const isPending = ticket.status === "pending";
+                        return (
+                          <div className={`admin-ticket-card ${ticket.status}`} key={ticket.ticket_id || ticket.id}>
+                            <div className="ticket-top-row">
+                              <div className="ticket-user-info">
+                                <strong>{ticket.name || "Guest Explorer"}</strong>
+                                <span className="ticket-email">({ticket.email || "No email"})</span>
+                                <span className={`source-badge ${ticket.source || "dashboard"}`}>
+                                  {ticket.source === "homepage_footer" ? "🌐 Homepage Footer" : "💬 Dashboard Help"}
+                                </span>
+                              </div>
+                              <div className="ticket-meta">
+                                <span className={`ticket-status-pill ${ticket.status}`}>
+                                  {ticket.status === "pending" ? "● Pending" : "✓ Resolved"}
+                                </span>
+                                <small>{formatDate(ticket.created_at)}</small>
+                              </div>
+                            </div>
+
+                            <div className="ticket-category-line">
+                              <span className="category-tag">📂 {ticket.category || "General Inquiry"}</span>
+                              <span className="ticket-id-tag">ID: {ticket.ticket_id}</span>
+                            </div>
+
+                            <div className="ticket-message-body">
+                              <p>{ticket.message}</p>
+                            </div>
+
+                            <div className="ticket-actions-row">
+                              {isPending ? (
+                                <button
+                                  className="primary-btn resolve-btn"
+                                  onClick={() => handleUpdateTicketStatus(ticket.ticket_id, "resolved")}
+                                >
+                                  ✓ Mark as Resolved
+                                </button>
+                              ) : (
+                                <button
+                                  className="secondary-btn reopen-btn"
+                                  onClick={() => handleUpdateTicketStatus(ticket.ticket_id, "pending")}
+                                >
+                                  ↶ Re-open Ticket
+                                </button>
+                              )}
+                              <a
+                                href={`mailto:${ticket.email}?subject=GitBridge Support: Ticket ${ticket.ticket_id}`}
+                                className="secondary-btn reply-btn"
+                              >
+                                ✉ Reply via Email
+                              </a>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    {adminTickets.length === 0 && (
+                      <p className="empty-state">No inquiries found in the database. When visitors ask questions, they will appear here in real time.</p>
+                    )}
+                  </div>
+                )}
+              </section>
+            </div>
+          )}
         </section>
       </main>
+
 
       {/* ================= HELP CENTER MODAL ================= */}
       {helpModalOpen && (

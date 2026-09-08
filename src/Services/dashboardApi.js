@@ -80,3 +80,19 @@ export const generateRoast = () =>
 
 export const clearNotifications = () =>
   request("/notifications/clear", { method: "POST" });
+
+export const submitPublicInquiry = (payload) =>
+  request("/help/inquiry", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+
+export const getAdminInquiries = () =>
+  request("/admin/inquiries");
+
+export const updateInquiryStatus = (ticketId, status) =>
+  request(`/admin/inquiries/${ticketId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ status }),
+  });
+
