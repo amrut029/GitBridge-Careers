@@ -742,7 +742,7 @@ export default function DashboardPage() {
               >
                 <span className="avatar">{initials}</span>
                 <strong className="profile-name">{displayName}</strong>
-                <span className="caret">⌄</span>
+                <span className="caret"></span>
               </button>
 
               {profileOpen && (
@@ -785,7 +785,7 @@ export default function DashboardPage() {
                   <span className="eyebrow">REAL REPOSITORIES & METRICS</span>
                   <h1>
                     Welcome back,<br />
-                    <em>{displayName}!</em> 👋
+                    <em>{displayName}!</em> 
                   </h1>
                   <p>
                     {github

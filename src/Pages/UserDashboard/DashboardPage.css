@@ -119,154 +119,428 @@ button {
 }
 
 /* ================= SIDEBAR ================= */
+/* ================= SIDEBAR ================= */
+
 .gb-sidebar {
   width: 290px;
+  min-width: 290px;
   min-height: 100vh;
+
   border-right: 1px solid var(--border-light);
+
   padding: 24px 16px;
+
   background: var(--sidebar-bg);
+
   position: sticky;
   top: 0;
+
   height: 100vh;
+
   display: flex;
   flex-direction: column;
+
   overflow-y: auto;
+
   z-index: 50;
+
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
 }
+
+/* Chrome / Edge scrollbar */
+.gb-sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.gb-sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.gb-sidebar::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 10px;
+}
+
+.gb-sidebar::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
+
+
+/* ================= LOGO ================= */
 
 .gb-logo {
   font-size: 26px;
   font-weight: 800;
+
   display: flex;
   gap: 10px;
   align-items: center;
+
   padding: 6px 14px 28px;
+
   color: var(--text);
+
   letter-spacing: -0.5px;
+
+  white-space: nowrap;
 }
 
 .bolt {
   color: var(--yellow);
   font-size: 28px;
-  filter: drop-shadow(0 0 10px rgba(255, 202, 58, 0.4));
+
+  filter: drop-shadow(
+    0 0 10px rgba(255, 202, 58, 0.4)
+  );
 }
+
+
+/* ================= SECTION LABEL ================= */
 
 .nav-label {
   color: var(--muted);
+
   font-size: 11px;
   letter-spacing: 2px;
   font-weight: 800;
+
   padding: 14px 14px 8px;
+
+  white-space: nowrap;
 }
 
 .growth {
   margin-top: 18px;
 }
 
+
+/* ================= SIDEBAR ITEMS ================= */
+
 .side-item {
   width: 100%;
+
+  min-height: 44px;
+
   background: transparent;
+
   color: var(--muted);
+
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 12px 14px;
-  border-radius: 9px;
+
+  gap: 12px;
+
+  padding: 10px 12px;
+
+  border: 1px solid transparent;
+  border-radius: 11px;
+
   font-weight: 600;
   font-size: 14px;
+
   text-align: left;
-  margin: 2px 0;
-  transition: all 0.2s ease;
+
+  margin: 3px 0;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+
   position: relative;
+
+  cursor: pointer;
+
+  white-space: nowrap;
 }
 
-.side-item span {
+
+/* ================= ITEM TEXT ================= */
+
+/*
+   IMPORTANT:
+   Sirf first span ko flexible rakha hai.
+   Side-badge ko flex: 0 diya hai.
+*/
+
+.side-item > span:first-of-type {
   flex: 1;
+
+  min-width: 0;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
 }
+
+
+/* ================= ICON / TEXT NODE ================= */
+
+/*
+   Button ke starting icon/text ko fixed space.
+*/
+
+.side-item {
+  line-height: 1.2;
+}
+
+
+/* ================= HOVER ================= */
 
 .side-item:hover {
   background: var(--panel2);
+
   color: var(--text);
+
+  border-color: var(--border-light);
+
   transform: translateX(3px);
+
+  box-shadow:
+    0 4px 14px rgba(0, 0, 0, 0.08);
 }
+
+
+/* ================= ACTIVE ================= */
 
 .side-item.active {
   background: var(--panel2);
+
   border-left: 3px solid var(--purple);
+
   color: var(--text);
-  box-shadow: 0 4px 14px var(--accent-glow);
+
+  box-shadow:
+    0 4px 14px var(--accent-glow);
 }
+
+
+/* Active left glow */
+.side-item.active::before {
+  content: "";
+
+  position: absolute;
+
+  left: -3px;
+  top: 8px;
+  bottom: 8px;
+
+  width: 3px;
+
+  background: var(--purple);
+
+  border-radius: 0 5px 5px 0;
+
+  box-shadow:
+    0 0 12px var(--purple);
+}
+
+
+/* ================= BADGES ================= */
 
 .side-badge {
-  font-size: 11px;
-  padding: 2px 8px;
-  border-radius: 12px;
+  flex: 0 0 auto;
+
+  min-width: 42px;
+
+  max-width: 100px;
+
+  height: 22px;
+
+  padding: 3px 9px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 999px;
+
   background: var(--border);
+
   color: var(--text);
+
+  font-size: 10px;
+  line-height: 1;
+
   font-weight: 700;
+
+  white-space: nowrap;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  border: 1px solid transparent;
+
+  letter-spacing: 0.2px;
+
+  margin-left: 4px;
 }
 
+
+/* ================= GREEN BADGE ================= */
+
 .green-badge {
-  background: rgba(16, 185, 129, 0.2);
+  background: rgba(16, 185, 129, 0.16);
+
   color: var(--green);
-  border: 1px solid rgba(16, 185, 129, 0.3);
+
+  border: 1px solid rgba(16, 185, 129, 0.35);
+
+  box-shadow:
+    0 0 10px rgba(16, 185, 129, 0.08);
 }
+
+
+/* ================= PENDING BADGE ================= */
 
 .pending-badge {
   background: rgba(245, 158, 11, 0.15);
+
   color: #f59e0b;
+
   border: 1px solid rgba(245, 158, 11, 0.3);
 }
 
+
+/* ================= MATCH BADGE ================= */
+
 .fire-badge {
-  background: rgba(239, 68, 68, 0.2);
+  min-width: 68px;
+
+  background: rgba(239, 68, 68, 0.14);
+
   color: #ef4444;
+
   border: 1px solid rgba(239, 68, 68, 0.3);
+
   animation: pulse 2s infinite;
 }
 
+
+/* ================= XP BADGE ================= */
+
 .xp-badge {
-  background: rgba(139, 77, 232, 0.2);
+  min-width: 52px;
+
+  background: rgba(139, 77, 232, 0.16);
+
   color: var(--purple);
-  border: 1px solid rgba(139, 77, 232, 0.3);
+
+  border: 1px solid rgba(139, 77, 232, 0.35);
+
+  box-shadow:
+    0 0 10px rgba(139, 77, 232, 0.08);
 }
 
+
+/* ================= BADGE HOVER ================= */
+
+.side-item:hover .side-badge {
+  filter: brightness(1.08);
+}
+
+
 /* ================= MAIN WRAPPER ================= */
+
 .gb-main {
   flex: 1;
+
   min-width: 0;
+
   display: flex;
   flex-direction: column;
 }
 
+
 /* ================= TOP NAVBAR ================= */
+
 .gb-topbar {
   height: 80px;
+
   border-bottom: 1px solid var(--border-light);
+
   display: flex;
+
   align-items: center;
+
   justify-content: space-between;
+
   padding: 0 36px;
+
   background: var(--topbar-bg);
+
   backdrop-filter: blur(12px);
+
   position: sticky;
+
   top: 0;
+
   z-index: 40;
 }
 
+
+/* ================= TOPBAR TITLE ================= */
+
 .topbar-title {
   display: flex;
+
   flex-direction: column;
+
   gap: 2px;
+
   font-size: 18px;
+
   font-weight: 700;
+
   color: var(--text);
 }
 
 .sub-title {
   font-size: 12px;
+
   font-weight: 500;
+
   color: var(--muted);
+}
+
+
+/* ================= RESPONSIVE SIDEBAR ================= */
+
+@media (max-width: 900px) {
+  .gb-sidebar {
+    width: 250px;
+    min-width: 250px;
+
+    padding: 20px 12px;
+  }
+
+  .side-item {
+    gap: 10px;
+
+    padding: 10px;
+
+    font-size: 13px;
+  }
+
+  .side-badge {
+    font-size: 9px;
+
+    padding: 3px 7px;
+
+    min-width: 38px;
+  }
+
+  .fire-badge {
+    min-width: 58px;
+  }
+
+  .xp-badge {
+    min-width: 46px;
+  }
 }
 
 .top-actions {
@@ -292,19 +566,70 @@ button {
   font-weight: 600;
 }
 
+/* ================= THEME SELECT ================= */
+
 .theme-select-dropdown {
-  background: transparent;
-  border: none;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  min-width: 170px;
+  padding: 10px 38px 10px 14px;
+
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+
   color: var(--text);
   font-size: 13px;
   font-weight: 600;
+
   outline: none;
   cursor: pointer;
+
+  transition: all 0.25s ease;
+
+  /* Custom arrow */
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--text-muted) 50%),
+    linear-gradient(135deg, var(--text-muted) 50%, transparent 50%);
+  background-position:
+    calc(100% - 17px) 50%,
+    calc(100% - 12px) 50%;
+  background-size:
+    5px 5px,
+    5px 5px;
+  background-repeat: no-repeat;
 }
 
+/* Hover */
+.theme-select-dropdown:hover {
+  border-color: #7c83ff;
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.15);
+}
+
+/* Focus */
+.theme-select-dropdown:focus {
+  border-color: #7c83ff;
+  box-shadow:
+    0 0 0 3px rgba(99, 102, 241, 0.12),
+    0 6px 20px rgba(99, 102, 241, 0.12);
+}
+
+/* Options */
 .theme-select-dropdown option {
   background: var(--panel);
   color: var(--text);
+
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* Selected option */
+.theme-select-dropdown option:checked {
+  background: #6366f1;
+  color: #ffffff;
 }
 
 .top-menu-wrap {
@@ -604,7 +929,7 @@ button {
 .eyebrow {
   color: var(--purple2);
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: 2px;
   display: block;
   margin-bottom: 6px;
@@ -2494,7 +2819,7 @@ button {
 
 .career-value {
   font-size: 24px;
-  font-weight: 800;
+  font-weight: 600;
   color: var(--text);
 }
 
