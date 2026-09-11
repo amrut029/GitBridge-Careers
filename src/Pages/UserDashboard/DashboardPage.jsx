@@ -818,7 +818,7 @@ export default function DashboardPage() {
                   disabled={!bothConnected || roastBusy}
                   onClick={handleRoast}
                 >
-                  🔥 Generate Hinglish Roast
+                  🔥 Generate  Roast
                 </button>
                 <button
                   className="quick-btn secondary"
@@ -872,7 +872,7 @@ export default function DashboardPage() {
                 <div className="roast-head">
                   <div>
                     <span className="eyebrow">SPECIAL ENTERTAINMENT</span>
-                    <h2>🔥 Desi AI Developer Roast (Hinglish)</h2>
+                    <h2>🔥 Developer Roast</h2>
                     <p>
                       {bothConnected
                         ? "Aapke GitHub commits, private repos, aur resume skills par based kadak roast!"
@@ -888,7 +888,7 @@ export default function DashboardPage() {
                     {roastBusy
                       ? "Roasting in progress... 🌶️"
                       : roast
-                      ? "🔥 Ek Aur Roast Do! 😈"
+                      ? "🔥 roast again 😈"
                       : "🔥 Roast Me (Hinglish)"}
                   </button>
                 </div>

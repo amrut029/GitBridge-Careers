@@ -618,20 +618,23 @@ button {
 
 /* Options */
 .theme-select-dropdown option {
-  background: var(--panel);
-  color: var(--text);
-
-  padding: 12px;
-  font-size: 14px;
+  background: #111827;
+  color: #f8fafc;
+  padding: 10px 14px;
+  font-size: 14px; 
   font-weight: 600;
 }
 
-/* Selected option */
-.theme-select-dropdown option:checked {
-  background: #6366f1;
+.theme-select-dropdown option:hover {
+  background: #1e293b;
   color: #ffffff;
 }
 
+.theme-select-dropdown option:checked {
+  background: #6366f1;
+  color: #ffffff;
+  font-weight: 700;
+}
 .top-menu-wrap {
   position: relative;
 }
@@ -1684,7 +1687,7 @@ button {
 
 .ats-num {
   font-size: 38px;
-  font-weight: 900;
+  font-weight: 700;
   color: var(--green);
 }
 
@@ -1817,6 +1820,7 @@ button {
   background: var(--panel2);
   padding: 16px 20px;
   border-radius: 12px;
+  margin-top: 1rem;
   border: 1px solid var(--border);
 }
 
@@ -2162,6 +2166,7 @@ button {
 
 .apply-btn {
   flex: 1;
+  max-width: 150px;
 }
 
 .bookmark-btn {
@@ -2172,6 +2177,7 @@ button {
   border-radius: 9px;
   font-size: 13px;
   font-weight: 600;
+  min-height: 39px;
   transition: all 0.2s;
 }
 

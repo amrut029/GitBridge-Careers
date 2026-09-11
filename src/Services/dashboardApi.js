@@ -68,3 +68,9 @@ export const generateRoast = () =>
 
 export const clearNotifications = () =>
   request("/notifications/clear", { method: "POST" });
+
+export const submitPublicInquiry = (inquiryData) =>
+  request("/inquiry", {
+    method: "POST",
+    body: JSON.stringify(inquiryData),
+  });
