@@ -17,7 +17,7 @@ from jose import jwt, JWTError
 from dotenv import load_dotenv
 import numpy as np
 
-from database import get_users_collection, get_support_tickets_collection
+from database import get_users_collection, get_support_tickets_collection, get_opportunities_collection
 from resume_service import extract_pdf_text, extract_docx_text, calculate_ats_score
 from ml_service import evaluate_developer_profile
 
@@ -430,6 +430,15 @@ def get_current_user(authorization: str = Header(None)):
             raise err
         raise HTTPException(status_code=401, detail="Session expired or invalid token.")
 
+def require_roles(allowed_roles: list):
+    def role_checker(authorization: str = Header(None)):
+        user = get_current_user(authorization)
+        user_role = user.get("role", "student")
+        if user_role not in allowed_roles:
+            raise HTTPException(status_code=403, detail=f"Role '{user_role}' is not authorized to access this resource.")
+        return user
+    return role_checker
+
 
 def serialize_user(user):
     github = user.get("github")
@@ -445,6 +454,8 @@ def serialize_user(user):
         "id": str(user["_id"]),
         "name": user.get("name") or user.get("email", "").split("@")[0],
         "email": user.get("email"),
+        "role": user.get("role", "student"),
+        "recruiter_status": user.get("recruiter_status"),
         "target_role": user.get("target_role", ""),
         "location_pref": user.get("location_pref", ""),
         "phone": user.get("phone", ""),
@@ -687,57 +698,54 @@ def submit_help_query(
 # GET OPPORTUNITIES (ACCURATE REAL-DATA MATCH SCORING)
 # =========================================================
 @router.get("/opportunities")
-def get_opportunities(authorization: str = Header(None)):
+def get_opportunities(
+    domain: str = None,
+    location: str = None,
+    type: str = None,
+    source: str = None,
+    authorization: str = Header(None)
+):
     user = get_current_user(authorization)
-    resume = user.get("resume") or {}
-    github = user.get("github") or {}
+    resume = user.get("resume")
+    github = user.get("github")
+    
+    col = get_opportunities_collection()
+    
+    if col is None:
+        raise HTTPException(status_code=500, detail="Database connection failed")
+        
+    query = {"is_active": True}
+    if domain and domain != "all":
+        query["domain"] = domain
+    if location and location != "all":
+        query["city"] = location
+    if type and type != "all":
+        query["type"] = type
+    if source and source != "all":
+        query["source"] = source
 
-    user_skills = [s.lower() for s in resume.get("skills", [])]
-    user_langs = [l.lower() for l in (github.get("stats", {}).get("languages", {}).keys())]
-
-    # Extract technologies and keywords from actual repositories
-    repo_keywords = []
-    for r in github.get("repositories", []):
-        name = str(r.get("name", "")).lower()
-        desc = str(r.get("description", "")).lower()
-        text = f"{name} {desc}"
-        for kw in [
-            "kubernetes", "docker", "terraform", "jenkins", "linux", "react", "python",
-            "fastapi", "aws", "node", "html", "css", "mongodb", "postgres", "git",
-            "ci/cd", "hcl", "shell", "bash", "ansible", "microservice", "vue", "next"
-        ]:
-            if kw in text:
-                repo_keywords.append(kw)
-
-    all_user_skills = set(user_skills + user_langs + repo_keywords)
-
+    cursor = col.find(query)
+    opportunities_list = list(cursor)
+    
     scored_opportunities = []
-    for opp in OPPORTUNITIES_CATALOG:
-        required = opp.get("required_skills", [])
-        matched_skills = []
-
-        if not all_user_skills:
-            match_pct = 40
-        else:
-            for req in required:
-                req_l = req.lower()
-                # Direct match
-                if any(req_l in us or us in req_l for us in all_user_skills):
-                    matched_skills.append(req)
-                # Domain aliases (e.g. HCL/Shell -> DevOps/Linux/Terraform/Kubernetes)
-                elif req_l in ["devops", "cloud", "aws", "docker", "linux", "ci/cd", "terraform", "kubernetes", "jenkins"] and any(
-                    k in all_user_skills for k in ["hcl", "shell", "terraform", "kubernetes", "jenkins", "dockerfile", "linux"]
-                ):
-                    matched_skills.append(req)
-
-            match_ratio = len(matched_skills) / max(len(required), 1)
-            match_pct = int(np.clip(round(40 + match_ratio * 56), 35, 96))
-
-        scored_opportunities.append({
+    
+    from match_service import calculate_opportunity_match
+    
+    all_user_skills = set()
+    for opp in opportunities_list:
+        match_result = calculate_opportunity_match(resume, github, opp)
+        
+        # Merge dicts
+        opp_data = {
             **opp,
-            "match_score": match_pct,
-            "matched_skills": list(dict.fromkeys(matched_skills))
-        })
+            "id": str(opp.get("_id", opp.get("source_id", ""))),
+            **match_result
+        }
+        if "_id" in opp_data:
+            del opp_data["_id"]
+            
+        scored_opportunities.append(opp_data)
+        all_user_skills = max(all_user_skills, match_result.get("user_skill_count", 0)) if isinstance(all_user_skills, int) else match_result.get("user_skill_count", 0)
 
     # Sort descending by match score
     scored_opportunities.sort(key=lambda x: x["match_score"], reverse=True)
@@ -745,9 +753,162 @@ def get_opportunities(authorization: str = Header(None)):
     return {
         "opportunities": scored_opportunities,
         "total": len(scored_opportunities),
-        "user_skill_count": len(all_user_skills)
+        "user_skill_count": all_user_skills if isinstance(all_user_skills, int) else 0
     }
 
+@router.get("/opportunities/{opp_id}")
+def get_opportunity(opp_id: str, authorization: str = Header(None)):
+    user = get_current_user(authorization)
+    resume = user.get("resume")
+    github = user.get("github")
+    
+    col = get_opportunities_collection()
+    if col is None:
+        raise HTTPException(status_code=500, detail="Database connection failed")
+        
+    try:
+        if len(opp_id) == 24:
+            query = {"_id": ObjectId(opp_id)}
+        else:
+            query = {"source_id": opp_id}
+            
+        opp = col.find_one(query)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid opportunity ID")
+        
+    if not opp:
+        raise HTTPException(status_code=404, detail="Opportunity not found")
+        
+    from match_service import calculate_opportunity_match
+    match_result = calculate_opportunity_match(resume, github, opp)
+    
+    opp_data = {
+        **opp,
+        "id": str(opp.get("_id", opp.get("source_id", ""))),
+        **match_result
+    }
+    if "_id" in opp_data:
+        del opp_data["_id"]
+        
+    return opp_data
+
+
+# =========================================================
+# APPLICATIONS
+# =========================================================
+@router.post("/applications")
+def apply_opportunity(
+    payload: dict = Body(...),
+    authorization: str = Header(None)
+):
+    user = get_current_user(authorization)
+    opp_id = payload.get("opportunity_id")
+    app_type = payload.get("application_type", "internal") # internal or external
+    
+    if not opp_id:
+        raise HTTPException(status_code=400, detail="Opportunity ID is required")
+        
+    from database import get_applications_collection
+    apps_col = get_applications_collection()
+    
+    if apps_col is None:
+        raise HTTPException(status_code=500, detail="Database connection failed")
+        
+    # Check if already applied
+    existing = apps_col.find_one({"student_id": str(user["_id"]), "opportunity_id": opp_id})
+    if existing:
+        raise HTTPException(status_code=400, detail="Already applied to this opportunity")
+        
+    new_app = {
+        "student_id": str(user["_id"]),
+        "opportunity_id": opp_id,
+        "application_type": app_type,
+        "status": "Applied",
+        "applied_at": datetime.utcnow().isoformat(),
+        "updated_at": datetime.utcnow().isoformat()
+    }
+    if app_type == "external":
+        new_app["redirected_at"] = datetime.utcnow().isoformat()
+        
+    result = apps_col.insert_one(new_app)
+    return {"message": "Application successful", "application_id": str(result.inserted_id)}
+
+
+@router.get("/applications")
+def get_applications(authorization: str = Header(None)):
+    user = get_current_user(authorization)
+    
+    from database import get_applications_collection
+    apps_col = get_applications_collection()
+    
+    if apps_col is None:
+        raise HTTPException(status_code=500, detail="Database connection failed")
+        
+    cursor = apps_col.find({"student_id": str(user["_id"])})
+    apps_list = []
+    
+    col = get_opportunities_collection()
+    for app in cursor:
+        app_data = {
+            "id": str(app["_id"]),
+            "status": app.get("status"),
+            "applied_at": app.get("applied_at"),
+            "application_type": app.get("application_type")
+        }
+        if col:
+            try:
+                opp_query = {"_id": ObjectId(app["opportunity_id"])} if len(app["opportunity_id"]) == 24 else {"source_id": app["opportunity_id"]}
+                opp = col.find_one(opp_query)
+                if opp:
+                    app_data["opportunity"] = {
+                        "id": str(opp.get("_id", opp.get("source_id", ""))),
+                        "title": opp.get("title"),
+                        "company": opp.get("company"),
+                        "logo": opp.get("logo"),
+                        "location": opp.get("location")
+                    }
+            except Exception:
+                pass
+        apps_list.append(app_data)
+        
+    return {"applications": apps_list}
+
+# =========================================================
+# BOOKMARKS
+# =========================================================
+@router.post("/bookmarks/{opp_id}")
+def toggle_bookmark(opp_id: str, authorization: str = Header(None)):
+    user = get_current_user(authorization)
+    from database import get_bookmarks_collection
+    bookmarks_col = get_bookmarks_collection()
+    
+    if bookmarks_col is None:
+        raise HTTPException(status_code=500, detail="Database connection failed")
+        
+    existing = bookmarks_col.find_one({"student_id": str(user["_id"]), "opportunity_id": opp_id})
+    if existing:
+        bookmarks_col.delete_one({"_id": existing["_id"]})
+        return {"message": "Bookmark removed", "bookmarked": False}
+    else:
+        bookmarks_col.insert_one({
+            "student_id": str(user["_id"]),
+            "opportunity_id": opp_id,
+            "created_at": datetime.utcnow().isoformat()
+        })
+        return {"message": "Bookmark added", "bookmarked": True}
+
+@router.get("/bookmarks")
+def get_bookmarks(authorization: str = Header(None)):
+    user = get_current_user(authorization)
+    from database import get_bookmarks_collection
+    bookmarks_col = get_bookmarks_collection()
+    
+    if bookmarks_col is None:
+        raise HTTPException(status_code=500, detail="Database connection failed")
+        
+    cursor = bookmarks_col.find({"student_id": str(user["_id"])})
+    bookmark_ids = [str(b["opportunity_id"]) for b in cursor]
+    return {"bookmarks": bookmark_ids}
 
 # =========================================================
 # CONNECT / CHANGE GITHUB PROFILE

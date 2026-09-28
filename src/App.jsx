@@ -5,6 +5,8 @@ import HomePage from "./Pages/HomePage/HomePage";
 import LoginPage from "./Pages/UserLogin/LoginPage";
 import SignupPage from "./Pages/UserSignupPage/SignupPage";
 import DashboardPage from "./Pages/UserDashboard/DashboardPage";
+import RecruiterDashboard from "./Pages/RecruiterDashboard/RecruiterDashboard";
+import AdminDashboard from "./Pages/AdminDashboard/AdminDashboard";
 
 import "./App.css";
 
@@ -18,6 +20,10 @@ function App() {
       <Route path="/signup" element={<SignupPage />} />
 
       <Route path="/dashboard" element={<DashboardPage />} />
+
+      <Route path="/recruiter" element={<RecruiterDashboard />} />
+
+      <Route path="/admin" element={<AdminDashboard />} />
 
       <Route
         path="*"

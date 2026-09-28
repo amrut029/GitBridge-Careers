@@ -64,10 +64,17 @@ const LoginPage = () => {
         localStorage.setItem("user", JSON.stringify(data.user));
       }
 
-      setMessage("Welcome back! Redirecting to your dashboard...");
+      const userRole = data.user?.role || "student";
+      setMessage(`Welcome back! Redirecting to your ${userRole} dashboard...`);
 
       setTimeout(() => {
-        navigate("/dashboard");
+        if (userRole === "admin") {
+          navigate("/admin");
+        } else if (userRole === "recruiter") {
+          navigate("/recruiter");
+        } else {
+          navigate("/dashboard");
+        }
       }, 500);
     } catch (error) {
       console.error(error);

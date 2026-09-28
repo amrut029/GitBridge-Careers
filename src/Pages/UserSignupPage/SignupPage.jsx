@@ -8,6 +8,7 @@ function SignupPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState("student");
 
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
@@ -30,6 +31,7 @@ function SignupPage() {
             name: name,
             email: email,
             password: password,
+            role: role,
           }),
         }
       );
@@ -107,6 +109,14 @@ function SignupPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
             />
+          </div>
+
+          <div className="form-group">
+            <label>I am a</label>
+            <select value={role} onChange={(e) => setRole(e.target.value)} className="role-select">
+              <option value="student">Student / Job Seeker</option>
+              <option value="recruiter">Recruiter / Employer</option>
+            </select>
           </div>
 
           <button

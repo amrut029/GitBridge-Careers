@@ -47,6 +47,21 @@ export const submitHelpQuery = (query, email = "") =>
 
 export const getOpportunities = () => request("/opportunities");
 
+export const applyOpportunity = (oppId, applyType = "external") => {
+  return request("/applications", {
+    method: "POST",
+    body: JSON.stringify({ opportunity_id: oppId, application_type: applyType })
+  });
+};
+
+export const getApplications = () => request("/applications");
+
+export const toggleOpportunityBookmark = (oppId) => {
+  return request(`/bookmarks/${oppId}`, { method: "POST" });
+};
+
+export const getBookmarks = () => request("/bookmarks");
+
 export const connectGithub = (username, token = "") =>
   request("/github/connect", {
     method: "POST",

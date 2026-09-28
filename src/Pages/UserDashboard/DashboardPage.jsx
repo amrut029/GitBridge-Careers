@@ -11,6 +11,10 @@ import {
   getDashboard,
   getGithubOAuthUrl,
   getOpportunities,
+  applyOpportunity,
+  getApplications,
+  toggleOpportunityBookmark,
+  getBookmarks,
   refreshGithub,
   submitHelpQuery,
   updateProfile,
@@ -320,8 +324,24 @@ export default function DashboardPage() {
   const loadOpportunitiesData = async () => {
     try {
       setOppsLoading(true);
-      const res = await getOpportunities();
-      setOpportunities(res.opportunities || []);
+      const [oppsRes, bookmarksRes] = await Promise.all([
+        getOpportunities(),
+        getBookmarks().catch(() => ({ bookmarks: [] }))
+      ]);
+      setOpportunities(oppsRes.opportunities || []);
+      
+      if (bookmarksRes && bookmarksRes.bookmarks) {
+        // Map bookmarks array of IDs to internal bookmarks state structure
+        const mapped = bookmarksRes.bookmarks.map(id => ({
+          key: `opportunity_${id}`,
+          type: "opportunity",
+          id: id
+        }));
+        setBookmarks(prev => {
+          const nonOpps = prev.filter(b => b.type !== "opportunity");
+          return [...mapped, ...nonOpps];
+        });
+      }
     } catch (err) {
       console.error("Opportunities fetch error:", err);
     } finally {
@@ -445,9 +465,17 @@ export default function DashboardPage() {
 
 
   // Toggle Bookmark
-  const toggleBookmark = (item, type = "opportunity") => {
+  const toggleBookmark = async (item, type = "opportunity") => {
     const key = `${type}_${item.id || item.name || item.title}`;
     const exists = bookmarks.some((b) => b.key === key);
+
+    if (type === "opportunity") {
+      try {
+        await toggleOpportunityBookmark(item.id);
+      } catch (err) {
+        showNotification("Failed to update bookmark on server", "error");
+      }
+    }
 
     if (exists) {
       setBookmarks((prev) => prev.filter((b) => b.key !== key));
@@ -465,6 +493,18 @@ export default function DashboardPage() {
       };
       setBookmarks((prev) => [newBookmark, ...prev]);
       showNotification(`Saved to Bookmarks! ⭐`, "success");
+    }
+  };
+
+  const handleApply = async (opp, e) => {
+    e.preventDefault();
+    try {
+      await applyOpportunity(opp.id, "external");
+      showNotification("Application tracked successfully!", "success");
+      window.open(opp.apply_url, "_blank");
+    } catch (err) {
+      showNotification("Failed to track application.", "error");
+      window.open(opp.apply_url, "_blank");
     }
   };
 
@@ -1827,14 +1867,12 @@ export default function DashboardPage() {
                           </div>
 
                           <div className="opp-actions-row">
-                            <a
-                              href={opp.apply_url}
-                              target="_blank"
-                              rel="noreferrer"
+                            <button
+                              onClick={(e) => handleApply(opp, e)}
                               className="primary-btn apply-btn"
                             >
                               Apply Now ↗
-                            </a>
+                            </button>
                             <button
                               className={`bookmark-btn ${bookmarked ? "bookmarked" : ""}`}
                               onClick={() => toggleBookmark(opp, "opportunity")}

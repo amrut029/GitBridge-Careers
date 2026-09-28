@@ -18,6 +18,8 @@ class RegisterUser(BaseModel):
         min_length=6
     )
 
+    role: str = "student"
+
 
 # =========================================================
 # LOGIN USER
@@ -43,3 +45,5 @@ class UserResponse(BaseModel):
     email: str
 
     provider: str
+
+    role: str

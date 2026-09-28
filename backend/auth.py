@@ -52,7 +52,7 @@ pwd_context = CryptContext(
 # =========================================================
 # JWT HELPERS
 # =========================================================
-def create_access_token(user_id: str):
+def create_access_token(user_id: str, role: str = "student"):
     if not JWT_SECRET:
         raise HTTPException(
             status_code=500,
@@ -62,6 +62,7 @@ def create_access_token(user_id: str):
     expire_time = datetime.utcnow() + timedelta(days=7)
     payload = {
         "sub": str(user_id),
+        "role": role,
         "exp": expire_time
     }
     return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
@@ -97,6 +98,9 @@ def register_user(user: RegisterUser):
             detail="Database is not connected"
         )
 
+    if user.role == "admin":
+        raise HTTPException(status_code=403, detail="Cannot register as admin")
+
     existing_user = users_collection.find_one({
         "email": user.email.lower()
     })
@@ -109,16 +113,23 @@ def register_user(user: RegisterUser):
 
     hashed_password = pwd_context.hash(user.password)
 
+    role = user.role if user.role in ["student", "recruiter"] else "student"
+    recruiter_status = "pending" if role == "recruiter" else None
+
     new_user = {
         "name": user.name,
         "email": user.email.lower(),
         "password": hashed_password,
         "provider": "email",
+        "role": role,
         "created_at": datetime.utcnow()
     }
 
+    if recruiter_status:
+        new_user["recruiter_status"] = recruiter_status
+
     result = users_collection.insert_one(new_user)
-    token = create_access_token(str(result.inserted_id))
+    token = create_access_token(str(result.inserted_id), role=role)
 
     return {
         "message": "Registration successful",
@@ -128,7 +139,8 @@ def register_user(user: RegisterUser):
             "id": str(result.inserted_id),
             "name": user.name,
             "email": user.email.lower(),
-            "provider": "email"
+            "provider": "email",
+            "role": role
         }
     }
 
@@ -167,7 +179,8 @@ def login_user(user: LoginUser):
             detail="Invalid email or password"
         )
 
-    token = create_access_token(str(existing_user["_id"]))
+    role = existing_user.get("role", "student")
+    token = create_access_token(str(existing_user["_id"]), role=role)
 
     return {
         "message": "Login successful",
@@ -177,7 +190,8 @@ def login_user(user: LoginUser):
             "id": str(existing_user["_id"]),
             "name": existing_user.get("name"),
             "email": existing_user.get("email"),
-            "provider": existing_user.get("provider", "email")
+            "provider": existing_user.get("provider", "email"),
+            "role": role
         }
     }
 
@@ -278,12 +292,15 @@ async def google_callback(code: str = None, state: str = None, error: str = None
                 "email": email.lower(),
                 "google_id": google_id,
                 "provider": "google",
+                "role": "student",
                 "created_at": datetime.utcnow()
             }
             result = users_collection.insert_one(new_user)
             user_id = str(result.inserted_id)
+            role = "student"
         else:
             user_id = str(existing_user["_id"])
+            role = existing_user.get("role", "student")
             users_collection.update_one(
                 {"_id": existing_user["_id"]},
                 {
@@ -296,7 +313,7 @@ async def google_callback(code: str = None, state: str = None, error: str = None
             )
 
         # 5. Generate GitBridge JWT Token
-        jwt_token = create_access_token(user_id)
+        jwt_token = create_access_token(user_id, role=role)
 
         # 6. Redirect to frontend dashboard with token
         return RedirectResponse(url=f"{FRONTEND_URL}/dashboard?token={jwt_token}")

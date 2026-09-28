@@ -113,6 +113,22 @@ def get_support_tickets_collection():
     return db["support_tickets"]
 
 
+def get_opportunities_collection():
+    db = get_database()
+    return db["opportunities"] if db is not None else None
+
+def get_applications_collection():
+    db = get_database()
+    return db["applications"] if db is not None else None
+
+def get_bookmarks_collection():
+    db = get_database()
+    return db["bookmarks"] if db is not None else None
+
+def get_sync_logs_collection():
+    db = get_database()
+    return db["sync_logs"] if db is not None else None
+
 
 # =========================================================
 # CLOSE DATABASE

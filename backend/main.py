@@ -4,6 +4,8 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from auth import router as auth_router
 from dashboard import router as dashboard_router
+from recruiter import router as recruiter_router
+from admin import router as admin_router
 from database import connect_database, close_database
 
 
@@ -35,6 +37,8 @@ app.add_middleware(
 # ROUTERS
 app.include_router(auth_router)
 app.include_router(dashboard_router)
+app.include_router(recruiter_router)
+app.include_router(admin_router)
 
 
 @app.on_event("startup")
