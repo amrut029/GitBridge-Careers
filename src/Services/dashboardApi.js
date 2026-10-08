@@ -2,7 +2,7 @@ const API = "http://localhost:8000/api/dashboard";
 
 const authHeaders = () => {
   const token = localStorage.getItem("token");
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  return token ? { Authorization: `Bearer ${token}`, "X-Auth-Token": token } : {};
 };
 
 async function request(path, options = {}) {
@@ -25,7 +25,9 @@ async function request(path, options = {}) {
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    throw new Error(data.detail || data.message || "Something went wrong. Please try again.");
+    throw new Error(
+      data.detail || data.message || "Something went wrong. Please try again."
+    );
   }
 
   return data;
@@ -47,18 +49,31 @@ export const submitHelpQuery = (query, email = "") =>
 
 export const getOpportunities = () => request("/opportunities");
 
-export const applyOpportunity = (oppId, applyType = "external") => {
-  return request("/applications", {
+export const syncLiveOpportunities = () =>
+  request("/opportunities/sync-live", {
     method: "POST",
-    body: JSON.stringify({ opportunity_id: oppId, application_type: applyType })
   });
-};
+
+export const applyOpportunity = (oppId, applyType = "external") =>
+  request("/applications", {
+    method: "POST",
+    body: JSON.stringify({
+      opportunity_id: oppId,
+      application_type: applyType,
+    }),
+  });
 
 export const getApplications = () => request("/applications");
 
-export const toggleOpportunityBookmark = (oppId) => {
-  return request(`/bookmarks/${oppId}`, { method: "POST" });
-};
+export const confirmExternalApplication = (applicationId) =>
+  request(`/applications/${applicationId}/confirm`, {
+    method: "PATCH",
+  });
+
+export const toggleOpportunityBookmark = (oppId) =>
+  request(`/bookmarks/${oppId}`, {
+    method: "POST",
+  });
 
 export const getBookmarks = () => request("/bookmarks");
 
@@ -68,14 +83,17 @@ export const connectGithub = (username, token = "") =>
     body: JSON.stringify({ username, token }),
   });
 
-export const getGithubOAuthUrl = () =>
-  request("/github/connect-url");
+export const getGithubOAuthUrl = () => request("/github/connect-url");
 
 export const refreshGithub = () =>
-  request("/github/refresh", { method: "POST" });
+  request("/github/refresh", {
+    method: "POST",
+  });
 
 export const disconnectGithub = () =>
-  request("/github", { method: "DELETE" });
+  request("/github", {
+    method: "DELETE",
+  });
 
 export const uploadResume = async (file) => {
   const formData = new FormData();
@@ -88,13 +106,19 @@ export const uploadResume = async (file) => {
 };
 
 export const deleteResume = () =>
-  request("/resume", { method: "DELETE" });
+  request("/resume", {
+    method: "DELETE",
+  });
 
 export const generateRoast = () =>
-  request("/roast", { method: "POST" });
+  request("/roast", {
+    method: "POST",
+  });
 
 export const clearNotifications = () =>
-  request("/notifications/clear", { method: "POST" });
+  request("/notifications/clear", {
+    method: "POST",
+  });
 
 export const submitPublicInquiry = (payload) =>
   request("/help/inquiry", {
@@ -110,4 +134,3 @@ export const updateInquiryStatus = (ticketId, status) =>
     method: "PATCH",
     body: JSON.stringify({ status }),
   });
-

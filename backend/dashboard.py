@@ -1,4 +1,5 @@
 import os
+import random
 import secrets
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -39,7 +40,7 @@ GITHUB_REDIRECT_URI = os.getenv(
     "http://localhost:8000/api/dashboard/github/callback"
 )
 
-UPLOAD_DIR = Path("uploads/resumes")
+UPLOAD_DIR = Path(__file__).resolve().parent / "uploads" / "resumes"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 # Comprehensive Live Opportunities Catalog with Freshers Focus, Multiple Cities & Hiring Timelines
@@ -391,14 +392,18 @@ OPPORTUNITIES_CATALOG = [
 # =========================================================
 # AUTHENTICATION DEPENDENCY
 # =========================================================
-def get_current_user(authorization: str = Header(None)):
-    if not authorization:
+def get_current_user(
+    authorization: str = Header(None),
+    x_auth_token: str = Header(None, alias="X-Auth-Token")
+):
+    header = authorization or x_auth_token
+    if not header:
         raise HTTPException(
             status_code=401,
             detail="Authentication token required. Please log in."
         )
 
-    token = authorization.replace("Bearer ", "").strip()
+    token = header.replace("Bearer ", "").strip()
     if not token:
         raise HTTPException(
             status_code=401,
@@ -419,7 +424,13 @@ def get_current_user(authorization: str = Header(None)):
         if users is None:
             raise HTTPException(status_code=500, detail="Database is not connected.")
 
-        user = users.find_one({"_id": ObjectId(user_id)})
+        query = {"_id": user_id}
+        try:
+            query = {"$or": [{"_id": ObjectId(user_id)}, {"_id": user_id}]}
+        except Exception:
+            query = {"_id": user_id}
+
+        user = users.find_one(query)
         if not user:
             raise HTTPException(status_code=401, detail="User not found.")
 
@@ -431,8 +442,12 @@ def get_current_user(authorization: str = Header(None)):
         raise HTTPException(status_code=401, detail="Session expired or invalid token.")
 
 def require_roles(allowed_roles: list):
-    def role_checker(authorization: str = Header(None)):
-        user = get_current_user(authorization)
+    def role_checker(
+        authorization: str = Header(None),
+        x_auth_token: str = Header(None, alias="X-Auth-Token")
+    ):
+        header = authorization or x_auth_token
+        user = get_current_user(authorization=header)
         user_role = user.get("role", "student")
         if user_role not in allowed_roles:
             raise HTTPException(status_code=403, detail=f"Role '{user_role}' is not authorized to access this resource.")
@@ -448,7 +463,30 @@ def serialize_user(user):
         safe_github["has_private_access"] = bool(github.get("access_token"))
 
     resume = user.get("resume")
-    ml_insights = evaluate_developer_profile(github_data=github, resume_data=resume)
+    try:
+        ml_insights = evaluate_developer_profile(github_data=github, resume_data=resume)
+    except Exception as exc:
+        print(f"⚠️ evaluate_developer_profile fallback: {exc}")
+        ml_insights = {
+            "overall_score": 0,
+            "status": "pending_data",
+            "developer_level": "Onboarding Developer",
+            "percentile": "Unranked",
+            "domain_id": "fullstack",
+            "domain_name": "Getting Started",
+            "primary_signal": "Connect GitHub & Upload Resume",
+            "sub_scores": {
+                "code_quality": 0,
+                "ats_match": 0,
+                "community_impact": 0,
+                "tech_stack_breadth": 0
+            },
+            "strengths": ["Account created. Connect GitHub or upload resume to generate your score."],
+            "recommendations": [
+                "Connect your GitHub profile with public and private repositories.",
+                "Upload your tech resume (PDF/DOCX) for deep ATS parsing."
+            ]
+        }
 
     return {
         "id": str(user["_id"]),
@@ -603,8 +641,11 @@ async def fetch_github_user_data(username: str = None, access_token: str = None)
 # GET DASHBOARD (ME)
 # =========================================================
 @router.get("/me")
-def get_dashboard(authorization: str = Header(None)):
-    user = get_current_user(authorization)
+def get_dashboard(
+    authorization: str = Header(None),
+    x_auth_token: str = Header(None, alias="X-Auth-Token")
+):
+    user = get_current_user(authorization=authorization, x_auth_token=x_auth_token)
     return serialize_user(user)
 
 
@@ -695,17 +736,28 @@ def submit_help_query(
 
 
 # =========================================================
-# GET OPPORTUNITIES (ACCURATE REAL-DATA MATCH SCORING)
+# LIVE OPPORTUNITIES SYNC & CATALOG (ACCURATE REAL-DATA MATCH SCORING)
 # =========================================================
+@router.post("/opportunities/sync-live")
+def sync_live_jobs(
+    authorization: str = Header(None),
+    x_auth_token: str = Header(None, alias="X-Auth-Token")
+):
+    user = get_current_user(authorization=authorization, x_auth_token=x_auth_token)
+    from sync_service import fetch_and_sync_live_market_jobs
+    return fetch_and_sync_live_market_jobs(user_profile=user, limit=35)
+
+
 @router.get("/opportunities")
 def get_opportunities(
     domain: str = None,
     location: str = None,
     type: str = None,
     source: str = None,
-    authorization: str = Header(None)
+    authorization: str = Header(None),
+    x_auth_token: str = Header(None, alias="X-Auth-Token")
 ):
-    user = get_current_user(authorization)
+    user = get_current_user(authorization=authorization, x_auth_token=x_auth_token)
     resume = user.get("resume")
     github = user.get("github")
     
@@ -724,28 +776,18 @@ def get_opportunities(
     if source and source != "all":
         query["source"] = source
 
+    from sync_service import is_india_relevant
     cursor = col.find(query)
-    opportunities_list = list(cursor)
+    # Strictly filter for India-relevant opportunities (India locations, Remote India/Worldwide)
+    opportunities_list = [opp for opp in cursor if is_india_relevant(opp)]
     
     scored_opportunities = []
-    
-    from match_service import calculate_opportunity_match
-    
     all_user_skills = set()
+
     for opp in opportunities_list:
-        match_result = calculate_opportunity_match(resume, github, opp)
-        
-        # Merge dicts
-        opp_data = {
-            **opp,
-            "id": str(opp.get("_id", opp.get("source_id", ""))),
-            **match_result
-        }
-        if "_id" in opp_data:
-            del opp_data["_id"]
-            
+        opp_data = build_opportunity_response_data(opp, user, resume, github)
         scored_opportunities.append(opp_data)
-        all_user_skills = max(all_user_skills, match_result.get("user_skill_count", 0)) if isinstance(all_user_skills, int) else match_result.get("user_skill_count", 0)
+        all_user_skills = max(all_user_skills, opp_data.get("user_skill_count", 0)) if isinstance(all_user_skills, int) else opp_data.get("user_skill_count", 0)
 
     # Sort descending by match score
     scored_opportunities.sort(key=lambda x: x["match_score"], reverse=True)
@@ -755,6 +797,86 @@ def get_opportunities(
         "total": len(scored_opportunities),
         "user_skill_count": all_user_skills if isinstance(all_user_skills, int) else 0
     }
+
+def build_opportunity_response_data(opp: dict, user: dict, resume: dict = None, github: dict = None) -> dict:
+    skills = opp.get("required_skills")
+    if not isinstance(skills, list):
+        if isinstance(skills, str):
+            skills = [s.strip() for s in skills.split(",") if s.strip()]
+        else:
+            skills = []
+    opp["required_skills"] = skills
+
+    from match_service import calculate_opportunity_match
+    match_result = calculate_opportunity_match(resume, github, opp, user_profile=user)
+
+    # Determine work mode
+    loc_str = str(opp.get("location", "") + " " + opp.get("city", "")).lower()
+    if "remote" in loc_str or str(opp.get("work_mode", "")).lower() == "remote":
+        work_mode = "Remote"
+    elif "hybrid" in loc_str or str(opp.get("work_mode", "")).lower() == "hybrid":
+        work_mode = "Hybrid"
+    else:
+        work_mode = opp.get("work_mode") or "On-Site"
+
+    # Formatted posted date
+    raw_created = opp.get("external_created_at") or opp.get("created_at")
+    posted_date = None
+    if raw_created:
+        if isinstance(raw_created, datetime):
+            posted_date = raw_created.strftime("%b %d, %Y")
+        elif isinstance(raw_created, str):
+            posted_date = raw_created[:10]
+
+    deadline = opp.get("deadline") or opp.get("valid_till") or opp.get("application_deadline") or "Rolling Applications"
+
+    eligibility = {
+        "education": opp.get("education") or opp.get("degree") or "B.Tech / B.E / BCA / MCA / Graduate",
+        "branch": opp.get("branch") or "CS / IT / ECE / Allied Branches",
+        "experience": opp.get("experience") or "Freshers (0-1 Yrs)",
+        "graduation_year": opp.get("graduation_year") or opp.get("grad_year") or "2024 / 2025 / 2026 / 2027",
+        "location": opp.get("location") or "India (Eligible to work in India)",
+        "work_authorization": "Eligible to work in India"
+    }
+
+    company_details = {
+        "name": opp.get("company") or "Tech Company",
+        "stage": opp.get("stage") or "Verified Employer",
+        "website": opp.get("website") or opp.get("company_website") or None,
+        "location": opp.get("location") or "India",
+        "industry": opp.get("industry") or (opp.get("domain", "Tech").title() + " & Software")
+    }
+
+    opp_data = {
+        **opp,
+        "id": str(opp.get("_id", opp.get("source_id", ""))),
+        "title": opp.get("title") or "Engineering Opportunity",
+        "company": opp.get("company") or "Tech Company",
+        "description": opp.get("description") or "Exciting engineering role matching your profile.",
+        "location": opp.get("location") or opp.get("city") or "India",
+        "city": opp.get("city") or opp.get("location") or "India",
+        "work_mode": work_mode,
+        "type": opp.get("type") or "Full-Time",
+        "stipend": opp.get("stipend"),  # None if unavailable, strictly no fake defaults
+        "salary_min": opp.get("salary_min"),
+        "salary_max": opp.get("salary_max"),
+        "source": opp.get("source") or "External Feed",
+        "source_type": opp.get("source_type") or "external",
+        "apply_url": opp.get("apply_url"),
+        "experience": opp.get("experience") or "Fresher / 0-2 yrs",
+        "required_skills": skills,
+        "posted_date": posted_date,
+        "deadline": deadline,
+        "valid_till": deadline,
+        "hiring_timeline": opp.get("hiring_timeline") or "Actively Hiring",
+        "eligibility": eligibility,
+        "company_details": company_details,
+        **match_result
+    }
+    if "_id" in opp_data:
+        del opp_data["_id"]
+
+    return opp_data
 
 @router.get("/opportunities/{opp_id}")
 def get_opportunity(opp_id: str, authorization: str = Header(None)):
@@ -779,100 +901,282 @@ def get_opportunity(opp_id: str, authorization: str = Header(None)):
     if not opp:
         raise HTTPException(status_code=404, detail="Opportunity not found")
         
-    from match_service import calculate_opportunity_match
-    match_result = calculate_opportunity_match(resume, github, opp)
-    
-    opp_data = {
-        **opp,
-        "id": str(opp.get("_id", opp.get("source_id", ""))),
-        **match_result
-    }
-    if "_id" in opp_data:
-        del opp_data["_id"]
-        
-    return opp_data
+    return build_opportunity_response_data(opp, user, resume, github)
 
 
 # =========================================================
 # APPLICATIONS
 # =========================================================
+# =========================================================
+# APPLICATIONS
+# =========================================================
+
 @router.post("/applications")
 def apply_opportunity(
     payload: dict = Body(...),
     authorization: str = Header(None)
 ):
     user = get_current_user(authorization)
+
     opp_id = payload.get("opportunity_id")
-    app_type = payload.get("application_type", "internal") # internal or external
-    
+    app_type = payload.get("application_type", "external")
+
     if not opp_id:
-        raise HTTPException(status_code=400, detail="Opportunity ID is required")
-        
-    from database import get_applications_collection
+        raise HTTPException(
+            status_code=400,
+            detail="Opportunity ID is required"
+        )
+
+    if app_type not in ["internal", "external"]:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid application type"
+        )
+
+    from database import get_applications_collection, get_opportunities_collection, get_users_collection
+
     apps_col = get_applications_collection()
-    
+    opp_col = get_opportunities_collection()
+
     if apps_col is None:
-        raise HTTPException(status_code=500, detail="Database connection failed")
-        
-    # Check if already applied
-    existing = apps_col.find_one({"student_id": str(user["_id"]), "opportunity_id": opp_id})
+        raise HTTPException(
+            status_code=500,
+            detail="Database connection failed"
+        )
+
+    student_id = str(user["_id"])
+
+    existing = apps_col.find_one({
+        "student_id": student_id,
+        "opportunity_id": str(opp_id)
+    })
+
     if existing:
-        raise HTTPException(status_code=400, detail="Already applied to this opportunity")
-        
+        raise HTTPException(
+            status_code=400,
+            detail="Already applied to this opportunity"
+        )
+
+    # Find opportunity details
+    opp = None
+    if opp_col is not None:
+        if ObjectId.is_valid(opp_id):
+            opp = opp_col.find_one({"_id": ObjectId(opp_id)})
+        if not opp:
+            opp = opp_col.find_one({"source_id": str(opp_id)})
+
+    # Calculate match score and analysis
+    from match_service import calculate_opportunity_match
+    match_analysis = calculate_opportunity_match(user.get("resume"), user.get("github"), opp or {}, user)
+    match_score = match_analysis.get("overall_match", 75)
+
+    now = datetime.utcnow().isoformat()
+
     new_app = {
-        "student_id": str(user["_id"]),
-        "opportunity_id": opp_id,
+        "student_id": student_id,
+        "opportunity_id": str(opp_id),
         "application_type": app_type,
-        "status": "Applied",
-        "applied_at": datetime.utcnow().isoformat(),
-        "updated_at": datetime.utcnow().isoformat()
+        "status": "Redirected" if app_type == "external" else "Applied",
+        "match_score": match_score,
+        "match_analysis": match_analysis,
+        "applied_at": now,
+        "updated_at": now
     }
+
     if app_type == "external":
-        new_app["redirected_at"] = datetime.utcnow().isoformat()
-        
+        new_app["redirected_at"] = now
+        new_app["apply_url"] = opp.get("apply_url") if opp else None
+
+    if opp:
+        new_app["opp_title"] = opp.get("title")
+        new_app["opp_company"] = opp.get("company")
+
     result = apps_col.insert_one(new_app)
-    return {"message": "Application successful", "application_id": str(result.inserted_id)}
+
+    # Notify recruiter if opportunity was posted by a recruiter
+    users_col = get_users_collection()
+    if opp and opp.get("created_by") and users_col is not None:
+        recruiter_id = opp.get("created_by")
+        if ObjectId.is_valid(recruiter_id):
+            student_name = user.get("name") or user.get("email", "").split("@")[0]
+            recruiter_notif = {
+                "id": f"app_rec_{int(datetime.utcnow().timestamp())}",
+                "title": "New Candidate Application 👤",
+                "message": f"{student_name} applied for '{opp.get('title')}'. AI Match: {match_score}%.",
+                "time": now,
+                "read": False
+            }
+            users_col.update_one(
+                {"_id": ObjectId(recruiter_id)},
+                {"$push": {"notifications": {"$each": [recruiter_notif], "$position": 0, "$slice": 20}}}
+            )
+
+    # Notify student
+    if users_col is not None:
+        opp_title = opp.get("title", "Opportunity") if opp else "Opportunity"
+        opp_company = opp.get("company", "Company") if opp else "Company"
+        student_notif = {
+            "id": f"app_stu_{int(datetime.utcnow().timestamp())}",
+            "title": "Application Submitted 🚀",
+            "message": f"Your application for '{opp_title}' at {opp_company} has been received. Status: Applied.",
+            "time": now,
+            "read": False
+        }
+        users_col.update_one(
+            {"_id": user["_id"]},
+            {"$push": {"notifications": {"$each": [student_notif], "$position": 0, "$slice": 20}}}
+        )
+
+    return {
+        "message": "Application tracked successfully",
+        "application_id": str(result.inserted_id),
+        "status": new_app["status"],
+        "match_score": match_score
+    }
+
+
+@router.patch("/applications/{application_id}/confirm")
+def confirm_external_application(
+    application_id: str,
+    authorization: str = Header(None)
+):
+    user = get_current_user(authorization)
+
+    from database import get_applications_collection
+
+    apps_col = get_applications_collection()
+
+    if apps_col is None:
+        raise HTTPException(
+            status_code=500,
+            detail="Database connection failed"
+        )
+
+    if not ObjectId.is_valid(application_id):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid application ID"
+        )
+
+    student_id = str(user["_id"])
+    app_object_id = ObjectId(application_id)
+
+    app = apps_col.find_one({
+        "_id": app_object_id,
+        "student_id": student_id
+    })
+
+    if app is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Application not found"
+        )
+
+    if app.get("application_type") != "external":
+        raise HTTPException(
+            status_code=400,
+            detail="Only external applications can be confirmed here"
+        )
+
+    if app.get("status") == "Student Confirmed":
+        return {
+            "message": "Application already confirmed",
+            "status": "Student Confirmed"
+        }
+
+    now = datetime.utcnow().isoformat()
+
+    apps_col.update_one(
+        {
+            "_id": app_object_id,
+            "student_id": student_id
+        },
+        {
+            "$set": {
+                "status": "Student Confirmed",
+                "student_confirmed_at": now,
+                "updated_at": now
+            }
+        }
+    )
+
+    return {
+        "message": "Student confirmation recorded",
+        "status": "Student Confirmed"
+    }
 
 
 @router.get("/applications")
 def get_applications(authorization: str = Header(None)):
     user = get_current_user(authorization)
-    
+
     from database import get_applications_collection
+
     apps_col = get_applications_collection()
-    
+
     if apps_col is None:
-        raise HTTPException(status_code=500, detail="Database connection failed")
-        
-    cursor = apps_col.find({"student_id": str(user["_id"])})
+        raise HTTPException(
+            status_code=500,
+            detail="Database connection failed"
+        )
+
+    student_id = str(user["_id"])
+
+    cursor = apps_col.find({
+        "student_id": student_id
+    }).sort("applied_at", -1)
+
     apps_list = []
-    
+
     col = get_opportunities_collection()
+
     for app in cursor:
         app_data = {
             "id": str(app["_id"]),
-            "status": app.get("status"),
+            "status": app.get("status", "Applied"),
+            "match_score": app.get("match_score"),
+            "recruiter_notes": app.get("recruiter_notes", ""),
             "applied_at": app.get("applied_at"),
-            "application_type": app.get("application_type")
+            "updated_at": app.get("updated_at"),
+            "application_type": app.get("application_type", "internal")
         }
-        if col:
+
+        if col is not None:
             try:
-                opp_query = {"_id": ObjectId(app["opportunity_id"])} if len(app["opportunity_id"]) == 24 else {"source_id": app["opportunity_id"]}
+                opportunity_id = str(app.get("opportunity_id", ""))
+
+                if len(opportunity_id) == 24 and ObjectId.is_valid(opportunity_id):
+                    opp_query = {"_id": ObjectId(opportunity_id)}
+                else:
+                    opp_query = {"source_id": opportunity_id}
+
                 opp = col.find_one(opp_query)
+
                 if opp:
                     app_data["opportunity"] = {
                         "id": str(opp.get("_id", opp.get("source_id", ""))),
-                        "title": opp.get("title"),
-                        "company": opp.get("company"),
+                        "title": opp.get("title", "Opportunity"),
+                        "company": opp.get("company", "Company"),
                         "logo": opp.get("logo"),
-                        "location": opp.get("location")
+                        "location": opp.get("location"),
+                        "type": opp.get("type", "Full-time"),
+                        "domain": opp.get("domain", "software"),
+                        "stipend": opp.get("stipend") or opp.get("salary", ""),
+                        "source": opp.get("source", "GitBridge")
                     }
+                    if not app_data.get("match_score"):
+                        from match_service import calculate_opportunity_match
+                        m = calculate_opportunity_match(user.get("resume"), user.get("github"), opp, user)
+                        app_data["match_score"] = m.get("overall_match")
+
             except Exception:
                 pass
-        apps_list.append(app_data)
-        
-    return {"applications": apps_list}
 
+        apps_list.append(app_data)
+
+    return {
+        "applications": apps_list
+    }
 # =========================================================
 # BOOKMARKS
 # =========================================================
@@ -1220,7 +1524,7 @@ def delete_resume(authorization: str = Header(None)):
 
 
 # =========================================================
-# GENERATE HINGLISH AI ROAST (WORKS WITH GITHUB OR RESUME)
+# GENERATE SAVAGE DEVELOPER ROAST (ENGLISH ONLY, CRISP & UNIQUE)
 # =========================================================
 @router.post("/roast")
 def generate_roast_endpoint(authorization: str = Header(None)):
@@ -1248,71 +1552,95 @@ def generate_roast_endpoint(authorization: str = Header(None)):
     resume_skills = resume.get("skills", []) if resume else []
     ats_score = resume.get("ats_score", 0) if resume else 0
 
-    # Authentic, witty & savage Hinglish roast punchlines
-    punchlines = []
-
-    # 1. Opening & Repo Count
+    # 1. Opening & Repo Count observation (crisp, witty English)
+    part1_options = []
     if repo_count == 0 and not resume:
-        punchlines.append(
-            f"Bhai @{username}, GitHub account banaya par ek bhi repository nahi daali? Lagta hai README file bhi commit hone se darr rahi hai! 😂💀"
-        )
-    elif repo_count < 4 and repo_count > 0:
-        punchlines.append(
-            f"Arre bhai @{username}, kul milakar {repo_count} repos? Ye developer ka portfolio hai ya college ka ek assignment draft? 😭"
-        )
+        part1_options = [
+            f"@{username}, your GitHub profile is so completely deserted that even the default README has filed a missing person report.",
+            f"@{username}, opening your GitHub is like staring into an empty server room—not a single repository in sight."
+        ]
+    elif repo_count == 0 and resume:
+        part1_options = [
+            f"@{username}, your resume is uploaded, but your GitHub is an empty canvas waiting for its first actual repository.",
+            f"@{username}, you've got career ambitions on paper, but your GitHub commit history is still playing hide and seek."
+        ]
+    elif repo_count < 4:
+        part1_options = [
+            f"@{username}, you have just {repo_count} repositories—your GitHub looks more like a weekend draft than an engineering portfolio.",
+            f"With only {repo_count} repositories, your local drafts might graduate before your actual code does."
+        ]
     elif repo_count > 25:
-        punchlines.append(
-            f"Bhai @{username}, {repo_count} repositories?! Aadhi repos me toh khud tujhe nahi pata hoga ki code kyu likha tha... Poora graveyard bana rakha hai! 💀🚀"
-        )
-    elif repo_count > 0:
-        punchlines.append(
-            f"Arre wah @{username}, {repo_count} repositories hain! Par commit history dekh kar lagta hai saare commit messages me bas 'fix bug', 'final push', aur 'ab pakka chal gaya' hi likha hai! 😂"
-        )
+        part1_options = [
+            f"@{username}, you have {repo_count} repositories—half of which look like abandoned weekend experiments in a digital graveyard.",
+            f"With {repo_count} repositories, you seem to start a brand new project every time you hit a bug you don't feel like fixing."
+        ]
+    else:
+        part1_options = [
+            f"@{username}, you've built {repo_count} repositories, and we both know half the commit messages say 'fixed typo' or 'final final push'.",
+            f"With {repo_count} repositories on display, your profile radiates big weekend hackathon energy with weekday follow-through doubts.",
+            f"@{username}, you have {repo_count} public repositories—an honorable start, though most look like ambitious projects that lost momentum."
+        ]
+    part1 = random.choice(part1_options)
 
-    # 2. Private Repos Punchline
+    # 2. Tech / Skills / Stars / Private Repos Roast (1 punchy line)
+    part2_options = []
     if private_count > 0:
-        punchlines.append(
-            f"Aur ye jo {private_count} private repos chupa ke rakhi hain 🔒... usme kya NASA ka secret code hai ya adhoore YouTube tutorial ke copy-paste projects? Sach bata! 🤫😂"
+        part2_options.append(
+            f"You're guarding {private_count} private repositories—what's locked in there, proprietary quantum algorithms or hardcoded API keys you're embarrassed to push publicly?"
         )
-    elif repo_count > 0:
-        punchlines.append(
-            "Ek bhi private repo nahi hai? Ya toh tu 100% open source lover hai ya phir code itna khatarnak hai ki kisi ko dikha hi nahi sakte! 🚀"
-        )
-
-    # 3. Stars & Popularity Punchline
     if stars == 0 and repo_count > 0:
-        punchlines.append(
-            "GitHub par 0 stars ⭐... Tension mat le bhai, agar mummy ka GitHub account hota toh wo zaroor star kar deti! 😂❤️"
+        part2_options.append(
+            "Zero stars across your projects—not even a courtesy star from an alt account or your mom's browser."
         )
-    elif stars < 5 and stars > 0:
-        punchlines.append(
-            f"Total {stars} stars mile hain? Sach bolna, unme se ek toh tere doosre fake account ka hi star hoga na! 😉⭐"
+    elif stars > 0 and stars <= 5:
+        part2_options.append(
+            f"You've collected {stars} GitHub stars so far—we strongly suspect at least one came from your own secondary login."
         )
-    elif stars >= 5:
-        punchlines.append(
-            f"{stars} stars dekh kar toh lagta hai thoda bahut swag hai market me! Par production me console.log hatana mat bhulna! 🚀"
+    elif stars > 5:
+        part2_options.append(
+            f"With {stars} stars, you're looking like an aspiring open-source contributor—just remember to delete your console.log statements before boasting."
         )
 
-    # 4. Resume & ATS Skills Reality Check
     if resume_skills:
-        skill_sample = ", ".join(resume_skills[:3])
-        punchlines.append(
-            f"Resume me toh bade confidence se likha hai '{skill_sample}', aur ATS score {ats_score}/100 laaye ho, par terminal me permission denied aate hi darr jaate ho! 💀😎"
+        skill_sample = ", ".join(resume_skills[:2])
+        part2_options.append(
+            f"Your resume proudly highlights '{skill_sample}' with an ATS score of {ats_score}/100, yet a single merge conflict probably sends panic down your spine."
         )
-    elif not resume:
-        punchlines.append(
-            "Abhi tak resume upload nahi kiya? Lagta hai resume me 'hardworking' ke alawa likhne ke liye skills dhoondh rahe ho! 😂📄"
+        part2_options.append(
+            f"Listing '{skill_sample}' on your resume is bold, especially when we know you still Google how to center a div and copy regex from StackOverflow."
         )
 
-    # 5. Savage Closing Advice
-    closings = [
-        "Final Verdict: Bhai CSS ki padding theek karna band kar, main branch me direct push marna chhodo, aur PR review seekh lo! Code solid hai, bass consistency badhao! 🔥🚀",
-        "Final Verdict: Mehnat 10/10 hai par testing 0/10! StackOverflow ko thoda rest do aur code ko production me bina dare deploy karo! ⚡💥",
-        "Final Verdict: Portfolio me dam hai, bass thoda daily commits ka streak banao aur recruiter ke inbox me aag laga do! 🚀🎯"
+    if top_language.lower() in ["javascript", "typescript", "react"]:
+        part2_options.append(
+            f"Writing {top_language}? Your node_modules folder is officially heavier than a black hole, but at least your terminal is full of colorful deprecation warnings."
+        )
+    elif top_language.lower() in ["python"]:
+        part2_options.append(
+            "Heavy on Python? You're just one indentation error away from an existential crisis, leaning on 20 pip libraries to write 10 lines of logic."
+        )
+    elif top_language.lower() in ["java", "c++", "c"]:
+        part2_options.append(
+            f"Coding in {top_language}? You probably write 40 lines of boilerplate and memory allocation just to print 'Hello World'."
+        )
+
+    if not part2_options:
+        part2_options = [
+            "Your commit graph suggests you debug primarily via print statements and sheer optimism.",
+            "You seem to spend more time customizing your VS Code theme than actually writing production-grade unit tests."
+        ]
+    part2 = random.choice(part2_options)
+
+    # 3. Savage Yet Constructive Closing Verdict (1 punchy line)
+    verdict_options = [
+        "Verdict: Stop tweaking CSS margins, learn to squash your commits, and ship that code to production! 🚀",
+        "Verdict: 10/10 for enthusiasm, 2/10 for unit tests. Give ChatGPT a break and deploy something real! 🔥",
+        "Verdict: High potential hidden behind abandoned branches. Commit daily, write clean PRs, and get hired! ⚡",
+        "Verdict: Stop pushing directly to main and write real tests. You're one polished portfolio project away from greatness! 🎯",
+        "Verdict: Great ambition, but tutorial hell isn't a career. Build an end-to-end app and blow recruiters away! 💥"
     ]
-    punchlines.append(closings[0])
+    part3 = random.choice(verdict_options)
 
-    roast_text = " ".join(punchlines)
+    roast_text = f"{part1} {part2} {part3}"
 
     roast_data = {
         "text": roast_text,
@@ -1325,8 +1653,8 @@ def generate_roast_endpoint(authorization: str = Header(None)):
 
     notification = {
         "id": f"rst_{int(datetime.utcnow().timestamp())}",
-        "title": "Hinglish AI Roast Ready 🔥",
-        "message": "Aapka desi developer roast taiyar hai! Padhke hasi nahi rukegi.",
+        "title": "Developer Roast Ready 🔥",
+        "message": f"Your savage developer roast is ready for @{username}! Check it out now.",
         "time": datetime.utcnow().isoformat(),
         "read": False
     }

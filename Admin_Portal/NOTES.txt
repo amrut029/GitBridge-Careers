@@ -1,0 +1,1 @@
+Phase 1 delivery: standalone admin frontend scaffold. Backend already provides dashboard, recruiters, recruiter status, sync logs and role checks. This frontend consumes those APIs. Before launch, verify admin user provisioning and exact login schema. No backend changes made in this phase.

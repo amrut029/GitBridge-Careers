@@ -564,3 +564,139 @@
     }
   
   }
+
+/* ============================= */
+/* ROLE SELECTOR TABS */
+/* ============================= */
+
+.role-tabs {
+  display: flex;
+  background: #121820;
+  border: 1px solid #1f2937;
+  border-radius: 10px;
+  padding: 4px;
+  gap: 4px;
+  margin-bottom: 20px;
+}
+
+.role-tab-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 8px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.role-tab-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.role-tab-btn.active {
+  background: #1e293b;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.role-tab-btn.active.student {
+  border-bottom: 2px solid #3b82f6;
+  color: #93c5fd;
+}
+
+.role-tab-btn.active.recruiter {
+  border-bottom: 2px solid #10b981;
+  color: #6ee7b7;
+}
+
+.role-tab-btn.active.admin {
+  border-bottom: 2px solid #8b5cf6;
+  color: #c4b5fd;
+}
+
+.role-hint-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 18px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.role-hint-banner.student {
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  color: #93c5fd;
+}
+
+.role-hint-banner.recruiter {
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  color: #6ee7b7;
+}
+
+.role-hint-banner.admin {
+  background: rgba(139, 92, 246, 0.08);
+  border: 1px solid rgba(139, 92, 246, 0.25);
+  color: #c4b5fd;
+}
+
+.role-badge-admin {
+  margin-top: 10px;
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  background: rgba(139, 92, 246, 0.07);
+  border: 1px dashed rgba(139, 92, 246, 0.35);
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.role-badge-admin .badge-header {
+  font-weight: 600;
+  color: #c4b5fd;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.role-badge-admin p {
+  color: #94a3b8;
+  margin: 4px 0 10px 0;
+  font-size: 12px;
+}
+
+.role-badge-admin code {
+  background: #0f172a;
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: #a78bfa;
+  font-family: monospace;
+}
+
+.autofill-btn {
+  background: #7c3aed;
+  color: #ffffff;
+  border: none;
+  padding: 7px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.autofill-btn:hover {
+  background: #6d28d9;
+  transform: translateY(-1px);
+}

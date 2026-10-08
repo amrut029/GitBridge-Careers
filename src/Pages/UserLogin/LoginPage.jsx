@@ -1,9 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../Context/AuthContext";
 import "./LoginPage.css";
+
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const { user: currentAuthUser, token: currentToken, login } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -12,6 +16,12 @@ const LoginPage = () => {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
+    if (token) {
+      navigate(`/google-success?token=${encodeURIComponent(token)}`, { replace: true });
+      return;
+    }
+
     const err = params.get("error");
     if (err) {
       if (err === "csrf_state_mismatch") {
@@ -22,7 +32,7 @@ const LoginPage = () => {
         setMessage("Google sign-in could not be completed. Please try again.");
       }
     }
-  }, []);
+  }, [navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -36,7 +46,7 @@ const LoginPage = () => {
     try {
       setLoading(true);
 
-      const response = await fetch("http://localhost:8000/api/auth/login", {
+      const response = await fetch(`${API_BASE}/api/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -50,22 +60,29 @@ const LoginPage = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        setMessage(data.detail || data.message || "Invalid credentials. Please try again.");
+        const detail = data.detail;
+        const msg = typeof detail === "string"
+          ? detail
+          : Array.isArray(detail)
+            ? detail.map((d) => d.msg || JSON.stringify(d)).join(", ")
+            : data.message || "Invalid credentials. Please try again.";
+        setMessage(msg);
         return;
       }
 
-      if (data.access_token) {
-        localStorage.setItem("token", data.access_token);
-      } else if (data.token) {
-        localStorage.setItem("token", data.token);
-      }
-
-      if (data.user) {
-        localStorage.setItem("user", JSON.stringify(data.user));
-      }
-
+      const authToken = data.access_token || data.token;
       const userRole = data.user?.role || "student";
-      setMessage(`Welcome back! Redirecting to your ${userRole} dashboard...`);
+
+      if (authToken) {
+        if (userRole === "admin") {
+          localStorage.setItem("gb_admin_token", authToken);
+          localStorage.setItem("admin_token", authToken);
+          localStorage.setItem("admin_user", JSON.stringify(data.user));
+        }
+        login(authToken, data.user);
+      }
+
+      setMessage("Welcome back! Redirecting to your dashboard...");
 
       setTimeout(() => {
         if (userRole === "admin") {
@@ -75,7 +92,7 @@ const LoginPage = () => {
         } else {
           navigate("/dashboard");
         }
-      }, 500);
+      }, 350);
     } catch (error) {
       console.error(error);
       setMessage("Backend server is not reachable. Please ensure FastAPI is running on port 8000.");
@@ -85,14 +102,14 @@ const LoginPage = () => {
   };
 
   const handleGoogleLogin = () => {
-    window.location.href = "http://localhost:8000/api/auth/google";
+    window.location.href = `${API_BASE}/api/auth/google`;
   };
 
   return (
     <div className="login-page">
       {/* LEFT BRAND SECTION */}
       <div className="login-left">
-        <div className="brand" onClick={() => navigate("/")}>
+        <div className="brand" onClick={() => navigate("/")} style={{ cursor: "pointer" }}>
           <div className="brand-logo">⚡</div>
           <h1>GitBridge Careers</h1>
         </div>
@@ -145,8 +162,50 @@ const LoginPage = () => {
         <div className="login-box">
           <div className="login-header">
             <h2>Welcome back</h2>
-            <p>Sign in to access your developer career dashboard.</p>
+            <p>Sign in to access your GitBridge dashboard.</p>
           </div>
+
+          {currentAuthUser && (
+            <div style={{
+              background: "rgba(56, 189, 248, 0.1)",
+              border: "1px solid rgba(56, 189, 248, 0.25)",
+              borderRadius: "8px",
+              padding: "10px 14px",
+              marginBottom: "16px",
+              fontSize: "12px",
+              color: "#e2e8f0",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "10px"
+            }}>
+              <div>
+                <span style={{ color: "#94a3b8", display: "block", fontSize: "11px" }}>Current Session:</span>
+                <strong style={{ color: "#38bdf8" }}>{currentAuthUser.email}</strong> ({currentAuthUser.role})
+              </div>
+              <button
+                type="button"
+                style={{
+                  background: "linear-gradient(135deg, #06b6d4, #3b82f6)",
+                  color: "#0f172a",
+                  border: "none",
+                  padding: "5px 10px",
+                  borderRadius: "6px",
+                  fontWeight: "700",
+                  cursor: "pointer",
+                  fontSize: "11px",
+                  whiteSpace: "nowrap"
+                }}
+                onClick={() => {
+                  if (currentAuthUser.role === "admin") navigate("/admin");
+                  else if (currentAuthUser.role === "recruiter") navigate("/recruiter");
+                  else navigate("/dashboard");
+                }}
+              >
+                Go to Dashboard →
+              </button>
+            </div>
+          )}
 
           {/* GOOGLE SIGN IN */}
           <button
@@ -188,7 +247,7 @@ const LoginPage = () => {
               <label>Email Address</label>
               <input
                 type="email"
-                placeholder="developer@example.com"
+                placeholder="name@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -229,6 +288,12 @@ const LoginPage = () => {
               {loading ? "Signing in..." : "Sign In →"}
             </button>
           </form>
+
+          {/* FOOTER */}
+          <div className="signup-text">
+            <p>Don't have an account?</p>
+            <button type="button" onClick={() => navigate("/signup")}>Create account</button>
+          </div>
         </div>
       </div>
     </div>

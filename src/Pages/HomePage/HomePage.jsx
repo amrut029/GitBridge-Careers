@@ -230,7 +230,7 @@ const HomePage = () => {
             </h1>
 
             <p className="hero-description">
-              Whether you are in Software, Cloud/DevOps, AI/ML, or Embedded Systems—GitBridge analyzes your real GitHub repositories (public & private), ATS resume, and coding velocity to deliver authentic developer scoring, Hinglish roasts, and fresher opportunities across India.
+              Whether you are in Software, Cloud/DevOps, AI/ML, or Embedded Systems—GitBridge analyzes your real GitHub repositories (public & private), ATS resume, and coding velocity to deliver authentic developer scoring, savage developer roasts, and fresher opportunities across India.
             </p>
 
             <div className="hero-buttons">
@@ -423,11 +423,11 @@ const HomePage = () => {
 
             <div className="feature-card">
               <div className="feature-icon orange">🔥</div>
-              <h3>Desi Hinglish AI Roast</h3>
+              <h3>Developer Roast</h3>
               <p>
-                A witty, humorous, and savage developer roast in authentic Hinglish based on your actual commits, stars, and private projects.
+                A witty, brutal, and hilarious code critique based on your actual commits, repositories, and resume skills.
               </p>
-              <span className="feature-link" onClick={() => setActiveModal("roast_info")}>Preview AI Roast →</span>
+              <span className="feature-link" onClick={() => setActiveModal("roast_info")}>Preview Developer Roast →</span>
             </div>
 
             <div className="feature-card">
@@ -614,7 +614,7 @@ const HomePage = () => {
               <span onClick={() => setActiveModal("help")}>Help Center Modal</span>
               <span onClick={() => setActiveModal("private_guide")}>Private Repos Guide</span>
               <span onClick={() => setActiveModal("ats_checklist")}>ATS Resume Checklist</span>
-              <span onClick={() => setActiveModal("roast_info")}>Hinglish AI Roast</span>
+              <span onClick={() => setActiveModal("roast_info")}>Developer Roast</span>
             </div>
 
             <div>
@@ -742,20 +742,20 @@ const HomePage = () => {
         </div>
       )}
 
-      {/* 4. HINGLISH ROAST INFO MODAL */}
+      {/* 4. DEVELOPER ROAST INFO MODAL */}
       {activeModal === "roast_info" && (
         <div className="home-modal-backdrop" onClick={() => setActiveModal(null)}>
           <div className="home-modal-card" onClick={(e) => e.stopPropagation()}>
             <div className="modal-head">
-              <h3>🔥 Desi Hinglish AI Roast Preview</h3>
+              <h3>🔥 Savage Developer Roast Preview</h3>
               <button className="modal-close-btn" onClick={() => setActiveModal(null)}>✕</button>
             </div>
             <p className="modal-desc">
-              Connect your GitHub and upload your resume to unlock a hilarious, brutal reality-check written especially for Indian tech developers!
+              Connect your GitHub and upload your resume to unlock a witty, brutal reality-check designed to elevate your developer profile!
             </p>
             <div className="sample-roast-box">
               <p>
-                &ldquo;Arre bhai, 12 repositories me se 10 toh tutorial ke adhoore code hain! Aur resume me likha hai &apos;Full Stack Architect&apos; jabki terminal me sudo lagate hi darr jaate ho! 😂 Mehnat 10/10 hai par production deployment 0/10! StackOverflow ko thoda rest do aur code ship karo! 🚀🔥&rdquo;
+                &ldquo;You have 12 repositories, and 10 of them are abandoned weekend clones with commit messages like &apos;fixed typo&apos;. You listed &apos;Full Stack Architect&apos; on your resume, but panic whenever a merge conflict appears. Verdict: Stop pushing to main, write unit tests, and ship real code to production! 🚀🔥&rdquo;
               </p>
             </div>
             <div className="modal-foot">

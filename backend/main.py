@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
@@ -17,7 +18,7 @@ app = FastAPI(
 # SESSION
 app.add_middleware(
     SessionMiddleware,
-    secret_key="gitbridge_super_secret_key_123456"
+    secret_key=os.getenv("SESSION_SECRET_KEY", "gitbridge_super_session_secret_2026")
 )
 
 
@@ -26,7 +27,13 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
-        "http://127.0.0.1:5173"
+        "http://127.0.0.1:5173",
+        "http://localhost:5174",
+        "http://127.0.0.1:5174",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
     ],
     allow_credentials=True,
     allow_methods=["*"],

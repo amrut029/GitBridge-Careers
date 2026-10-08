@@ -1,69 +1,39 @@
+import random
+
 def generate_roast(github_data):
-
-    repositories = github_data.get(
-        "repositories",
-        []
-    )
-
-    user = github_data.get(
-        "user",
-        {}
-    )
-
+    repositories = github_data.get("repositories", [])
+    user = github_data.get("user", {})
 
     repo_count = len(repositories)
-
-    followers = user.get(
-        "followers",
-        0
-    )
-
-    following = user.get(
-        "following",
-        0
-    )
-
-
-    # =====================================================
-    # ROAST LOGIC
-    # =====================================================
+    followers = user.get("followers", 0)
+    following = user.get("following", 0)
+    login = user.get("login", "developer")
 
     if repo_count == 0:
-
         return (
-            "Your GitHub profile is so empty that "
-            "even README is waiting for your first project."
+            f"@{login}, your GitHub profile is so empty that even the default README has filed a missing person report. "
+            "Verdict: Create a repo, write some code, and start your developer journey! 🚀"
         )
 
-
-    if repo_count < 3:
-
+    if repo_count < 4:
         return (
-            f"You have {repo_count} repositories. "
-            "GitHub is probably asking when the real "
-            "coding journey will begin."
+            f"@{login}, with just {repo_count} repositories, your profile looks more like a weekend draft than an engineering portfolio. "
+            "Verdict: Push real projects and leave tutorial clones behind! 🔥"
         )
 
-
-    if repo_count > 15:
-
+    if repo_count > 25:
         return (
-            f"You have {repo_count} repositories! "
-            "At this point even you might be wondering "
-            "which project is actually your best one."
+            f"@{login}, you have {repo_count} repositories—most of which look like abandoned weekend experiments in a digital graveyard. "
+            "Verdict: Stop creating new repos for every bug and start shipping to production! ⚡"
         )
-
 
     if following > followers * 3 and following > 10:
-
         return (
-            "You are following developers with full "
-            "motivation... now GitHub is waiting for "
-            "your commits to show the same energy."
+            f"@{login}, you are following {following} developers with maximum enthusiasm, but only have {followers} followers. "
+            "Verdict: Channel that admiration into daily commits and build something people actually star! 🎯"
         )
 
-
     return (
-        f"{repo_count} repositories and {followers} followers... "
-        "not bad! But your GitHub still has room to become legendary."
+        f"@{login}, you have {repo_count} repositories and {followers} followers—respectable start, but we both know half the commit messages say 'fixed stuff'. "
+        "Verdict: Write clean tests, squash your commits, and get hired! 🚀"
     )

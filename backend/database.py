@@ -45,11 +45,19 @@ def connect_database():
 
         print("🔄 Connecting to MongoDB...")
 
+        # Enable TLS for MongoDB Atlas (srv) or when explicitly configured
+        use_tls = "mongodb+srv://" in MONGO_URL or "ssl=true" in MONGO_URL.lower() or "tls=true" in MONGO_URL.lower()
+
+        mongo_kwargs = {
+            "serverSelectionTimeoutMS": 10000
+        }
+        if use_tls:
+            mongo_kwargs["tls"] = True
+            mongo_kwargs["tlsCAFile"] = certifi.where()
+
         client = MongoClient(
             MONGO_URL,
-            tls=True,
-            tlsCAFile=certifi.where(),
-            serverSelectionTimeoutMS=10000
+            **mongo_kwargs
         )
 
         # Test connection
