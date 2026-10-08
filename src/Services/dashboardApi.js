@@ -116,6 +116,7 @@ export const generateRoast = () =>
   });
 
 export const clearNotifications = () =>
+<<<<<<< HEAD
   request("/notifications/clear", {
     method: "POST",
   });
@@ -133,4 +134,12 @@ export const updateInquiryStatus = (ticketId, status) =>
   request(`/admin/inquiries/${ticketId}`, {
     method: "PATCH",
     body: JSON.stringify({ status }),
+=======
+  request("/notifications/clear", { method: "POST" });
+
+export const submitPublicInquiry = (inquiryData) =>
+  request("/inquiry", {
+    method: "POST",
+    body: JSON.stringify(inquiryData),
+>>>>>>> 7b799a42fa909d4709a4cb80793c7454fbf9bd47
   });

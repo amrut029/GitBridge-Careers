@@ -1077,7 +1077,7 @@ export default function DashboardPage() {
               >
                 <span className="avatar">{initials}</span>
                 <strong className="profile-name">{displayName}</strong>
-                <span className="caret">⌄</span>
+                <span className="caret"></span>
               </button>
 
               {profileOpen && (
@@ -1121,7 +1121,7 @@ export default function DashboardPage() {
                   <span className="eyebrow">CAREER INTELLIGENCE PLATFORM</span>
                   <h1>
                     Welcome back,<br />
-                    <em>{displayName}!</em> 👋
+                    <em>{displayName}!</em> 
                   </h1>
                   <p>
                     {github
@@ -1153,7 +1153,11 @@ export default function DashboardPage() {
                   disabled={!canRoast || roastBusy}
                   onClick={handleRoast}
                 >
+<<<<<<< HEAD
                   🔥 Generate Developer Roast
+=======
+                  🔥 Generate  Roast
+>>>>>>> 7b799a42fa909d4709a4cb80793c7454fbf9bd47
                 </button>
                 <button
                   className="quick-btn secondary"
@@ -1206,7 +1210,11 @@ export default function DashboardPage() {
               <section className="roast-card" id="roast-section">
                 <div className="roast-head">
                   <div>
+<<<<<<< HEAD
                     <span className="eyebrow">SAVAGE PROFILE CRITIQUE</span>
+=======
+                    <span className="eyebrow">SPECIAL ENTERTAINMENT</span>
+>>>>>>> 7b799a42fa909d4709a4cb80793c7454fbf9bd47
                     <h2>🔥 Developer Roast</h2>
                     <p>
                       {canRoast
@@ -1223,8 +1231,13 @@ export default function DashboardPage() {
                     {roastBusy
                       ? "Roasting in progress... 🌶️"
                       : roast
+<<<<<<< HEAD
                       ? "🔥 Roast Me Again! 😈"
                       : "🔥 Roast Me"}
+=======
+                      ? "🔥 roast again 😈"
+                      : "🔥 Roast Me (Hinglish)"}
+>>>>>>> 7b799a42fa909d4709a4cb80793c7454fbf9bd47
                   </button>
                 </div>
 
